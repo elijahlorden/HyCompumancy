@@ -13,8 +13,7 @@ public abstract class VMAction {
     public static final Map<String, VMAction> Actions = new HashMap<>();
     public static final Map<Class<? extends VMAction>, String> Names = new HashMap<>();
 
-    public static void Register(String name, VMAction action)
-    {
+    public static void Register(String name, VMAction action) {
         if (Actions.containsKey(name)) {
             Logger.at(Level.SEVERE).log("Attempted to register duplicate action: " + name);
             return;
@@ -23,15 +22,17 @@ public abstract class VMAction {
         Names.put(action.getClass(), name);
     }
 
-    public static VMAction GetAction(String name)
-    {
+    public static VMAction GetAction(String name) {
         if (!Actions.containsKey(name)) return null;
         return Actions.get(name);
     }
 
-    public static String GetName(VMAction action)
-    {
+    public static String GetName(VMAction action) {
         var cls = action.getClass();
+        return GetName(cls);
+    }
+
+    public static String GetName(Class<? extends VMAction> cls) {
         if (!Names.containsKey(cls)) return null;
         return Names.get(cls);
     }

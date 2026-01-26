@@ -3,13 +3,17 @@ package me.freznel.compumancy.vm.objects;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.logger.HytaleLogger;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.exceptions.InvalidActionException;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.interfaces.IExecutable;
 
+import java.util.logging.Level;
+
 public class ActionObject extends VMObject implements IExecutable {
+    private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
     public static final BuilderCodec<ActionObject> CODEC = BuilderCodec.builder(ActionObject.class, ActionObject::new)
             .append(new KeyedCodec<>("Ref", Codec.STRING), ActionObject::SetActionName, ActionObject::GetActionName)
             .add()
@@ -25,6 +29,15 @@ public class ActionObject extends VMObject implements IExecutable {
     public ActionObject() { }
     public ActionObject(VMAction action) { SetActionRef(action); }
     public ActionObject(String actionName) { SetActionName(actionName); }
+    public ActionObject(Class<? extends VMAction> cls) {
+        actionName = VMAction.GetName(cls);
+        if (actionName == null) {
+            actionName = cls.getName();
+            Logger.at(Level.SEVERE).log(String.format("Created ActionObject from unregistered VMAction %s", actionName));
+            return;
+        }
+        Ref = VMAction.GetAction(actionName);
+    }
     protected ActionObject(VMAction ref, String actionName) { Ref = ref; this.actionName = actionName; }
 
     public VMAction GetActionRef() { return Ref; }
