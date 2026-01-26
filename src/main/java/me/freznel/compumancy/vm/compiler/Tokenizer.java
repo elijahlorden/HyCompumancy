@@ -7,7 +7,7 @@ import java.util.ArrayDeque;
 
 public class Tokenizer {
 
-    public record Token(TokenType type, Object value) { }
+    public record Token(TokenType type, Object value, int line) { }
 
     private static final char ESCAPE = '\\';
 
@@ -168,19 +168,20 @@ public class Tokenizer {
     private Token readNextToken() {
         ReadWhitespace();
         if (index >= parseString.length()) return null;
+        int startLine = line;
         char nextChar = parseString.charAt(index++);
         if (nextChar == CHAR_STR) {
-            return new Token(TokenType.String, readString());
+            return new Token(TokenType.String, readString(), startLine);
         } else if (nextChar == LIST_START) {
-            return new Token(TokenType.OpenBrace, String.valueOf(LIST_START));
+            return new Token(TokenType.OpenBrace, String.valueOf(LIST_START), startLine);
         } else if (nextChar == LIST_END) {
-            return new Token(TokenType.CloseBrace, String.valueOf(LIST_END));
+            return new Token(TokenType.CloseBrace, String.valueOf(LIST_END), startLine);
         } else if (Character.isDigit(nextChar) || (nextChar == '-' && index < parseString.length() && Character.isDigit(parseString.charAt(index)))) {
-            return new Token(TokenType.Number, readNumber(nextChar));
+            return new Token(TokenType.Number, readNumber(nextChar), startLine);
         } else if (nextChar == VEC_START) {
-            return new Token(TokenType.Vector3, readVector());
+            return new Token(TokenType.Vector3, readVector(), startLine);
         } else {
-            return new Token(TokenType.Word, readWord(nextChar));
+            return new Token(TokenType.Word, readWord(nextChar), startLine);
         }
     }
 
