@@ -8,11 +8,11 @@ import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.exceptions.InvalidActionException;
 import me.freznel.compumancy.vm.exceptions.VMException;
-import me.freznel.compumancy.vm.interfaces.IExecutable;
+import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
 import java.util.logging.Level;
 
-public class ActionObject extends VMObject implements IExecutable {
+public class ActionObject extends VMObject implements IEvaluatable {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
     public static final BuilderCodec<ActionObject> CODEC = BuilderCodec.builder(ActionObject.class, ActionObject::new)
             .append(new KeyedCodec<>("Ref", Codec.STRING), ActionObject::SetActionName, ActionObject::GetActionName)
@@ -66,7 +66,7 @@ public class ActionObject extends VMObject implements IExecutable {
     }
 
     @Override
-    public void Execute(Invocation invocation) throws VMException {
+    public void Evaluate(Invocation invocation) throws VMException {
         if (Ref == null) throw new InvalidActionException(String.format("The action '%s' was not found", actionName));
         Ref.Execute(invocation);
     }

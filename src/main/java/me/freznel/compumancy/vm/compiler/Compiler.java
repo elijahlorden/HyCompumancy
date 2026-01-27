@@ -22,6 +22,7 @@ public class Compiler {
             switch (tkn.type()) {
                 case OpenBrace -> {
                     stack.push(new CompileList(tkn.line()));
+                    if (stack.size() > 10) throw new CompileException(String.format("Line %d: Compile-time list depth exceeded 10", tkn.line()));
                 }
 
                 case CloseBrace -> {

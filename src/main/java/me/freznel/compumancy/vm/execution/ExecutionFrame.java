@@ -4,7 +4,7 @@ import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
 import me.freznel.compumancy.vm.exceptions.InvalidActionException;
-import me.freznel.compumancy.vm.interfaces.IExecutable;
+import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.objects.VMObject;
 
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class ExecutionFrame extends Frame {
     }
 
     @Override
-    public boolean IsFinished() { return contents.isEmpty() || index >= contents.size() - 1; }
+    public boolean IsFinished() { return contents.isEmpty() || index >= contents.size(); }
 
     @Override
     public void Execute(Invocation invocation)
@@ -58,9 +58,9 @@ public class ExecutionFrame extends Frame {
         int budget = invocation.GetExecutionBudget();
         do {
             VMObject next = contents.get(index++);
-            if (!(next instanceof IExecutable executableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetName());
+            if (!(next instanceof IEvaluatable executableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetName());
             budget -= executableNext.ExecutionBudgetCost();
-            executableNext.Execute(invocation);
+            executableNext.Evaluate(invocation);
         } while (invocation.GetCurrentFrame() == this && budget > 0 && index < contents.size()); //Execute until another frame is pushed or the budget runs out
         invocation.SetExecutionBudget(budget);
     }

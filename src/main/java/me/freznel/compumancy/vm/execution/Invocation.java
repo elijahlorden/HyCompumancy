@@ -3,6 +3,7 @@ package me.freznel.compumancy.vm.execution;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import me.freznel.compumancy.vm.exceptions.StackOverflowException;
 import me.freznel.compumancy.vm.objects.VMObject;
 
 import java.util.ArrayList;
@@ -38,11 +39,17 @@ public class Invocation {
 
     public Frame GetCurrentFrame() { return frameStack.isEmpty() ? null : frameStack.getLast(); }
     public boolean IsFinished() { return frameStack.isEmpty(); }
-    public void PushFrame(Frame frame) { frameStack.addLast(frame); }
+    public void PushFrame(Frame frame) {
+        frameStack.addLast(frame);
+        if (frameStack.size() > 128) throw new StackOverflowException("Maximum execution depth of 128 exceeded");
+    }
 
     public int OperandCount() { return operandStack.size(); }
     public VMObject Pop() { return operandStack.removeLast(); }
-    public void Push(VMObject o) { operandStack.addLast(o); }
+    public void Push(VMObject o) {
+        operandStack.addLast(o);
+        if (operandStack.size() > 1024) throw new StackOverflowException("Maximum operand stack depth of 1024 exceeded");
+    }
     public VMObject Peek() { return operandStack.getLast(); }
     public VMObject Peek(int depth) { return operandStack.get((operandStack.size() - 1) - depth); }
 
@@ -51,7 +58,7 @@ public class Invocation {
         while (executionBudget > 0 && !frameStack.isEmpty()) {
             var frame = frameStack.getLast();
             frame.Execute(this);
-            if (frame.IsFinished()) frameStack.removeLast();
+            if (frame.IsFinished() && frameStack.getLast() == frame) frameStack.removeLast();
         }
 
     }

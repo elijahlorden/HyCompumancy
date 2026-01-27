@@ -11,7 +11,7 @@ public abstract class VMObject implements Cloneable {
     @Override
     public String toString()
     {
-        return "Base Object";
+        return "Object";
     }
 
     @Override

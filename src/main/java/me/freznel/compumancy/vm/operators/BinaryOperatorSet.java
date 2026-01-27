@@ -44,16 +44,23 @@ public class BinaryOperatorSet<T extends VMObject, K extends VMObject> {
             case Multiply -> set.Multiply(left, right);
             case Divide -> set.Divide(left, right);
             case Mod -> set.Mod(left, right);
+            case And -> set.And(left, right);
+            case Nand -> set.Nand(left, right);
+            case Or -> set.Or(left, right);
+            case Xor -> set.Xor(left, right);
         };
     }
 
 
-    public VMObject Add(T a, K b) { throw new InvalidOperationException(String.format("Attempted to Add %s and %s", a.GetName(), b.GetName())); }
-    public VMObject Subtract(T a, K b) { throw new InvalidOperationException(String.format("Attempted to Subtract %s and %s", a.GetName(), b.GetName())); }
-    public VMObject Multiply(T a, K b) { throw new InvalidOperationException(String.format("Attempted to Multiply %s and %s", a.GetName(), b.GetName())); }
-    public VMObject Divide(T a, K b) { throw new InvalidOperationException(String.format("Attempted to Divide %s and %s", a.GetName(), b.GetName())); }
-    public VMObject Mod(T a, K b) { throw new InvalidOperationException(String.format("Attempted to Mod %s and %s", a.GetName(), b.GetName())); }
-
+    public VMObject Add(T a, K b) { BinaryOperator.Add.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Subtract(T a, K b) { BinaryOperator.Subtract.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Multiply(T a, K b) { BinaryOperator.Multiply.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Divide(T a, K b) { BinaryOperator.Divide.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Mod(T a, K b) { BinaryOperator.Mod.ThrowInvalidOperation(a, b); return null; }
+    public VMObject And(T a, K b) { BinaryOperator.And.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Nand(T a, K b) { BinaryOperator.Nand.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Or(T a, K b) { BinaryOperator.Or.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Xor(T a, K b) { BinaryOperator.Xor.ThrowInvalidOperation(a, b); return null; }
 
 
 

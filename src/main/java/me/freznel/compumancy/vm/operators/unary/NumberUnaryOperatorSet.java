@@ -11,7 +11,12 @@ public class NumberUnaryOperatorSet extends UnaryOperatorSet<NumberObject> {
     }
 
     @Override
-    public VMObject Negate(NumberObject arg) {
+    public VMObject SignedNegate(NumberObject arg) {
         return new NumberObject(-arg.GetValue());
+    }
+
+    @Override
+    public VMObject UnsignedNegate(NumberObject arg) {
+        return new NumberObject((~((long)arg.GetValue())) >> 12);
     }
 }

@@ -25,4 +25,13 @@ public class NumberNumberBinaryOperatorSet extends BinaryOperatorSet<NumberObjec
     @Override
     public VMObject Mod(NumberObject a, NumberObject b) { return new NumberObject(a.GetValue() % b.GetValue()); }
 
+    @Override
+    public VMObject And(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) & ((long)b.GetValue())) >> 12); }
+    @Override
+    public VMObject Nand(NumberObject a, NumberObject b) { return new NumberObject((~((long)a.GetValue()) & ((long)b.GetValue())) >> 12);  }
+    @Override
+    public VMObject Or(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) | ((long)b.GetValue())) >> 12);  }
+    @Override
+    public VMObject Xor(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) ^ ((long)b.GetValue())) >> 12);  }
+
 }

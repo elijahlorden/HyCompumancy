@@ -6,7 +6,8 @@ import me.freznel.compumancy.vm.objects.VMObject;
 public enum UnaryOperator {
     Invalid,
     Length,
-    Negate;
+    SignedNegate,
+    UnsignedNegate;
 
     public static final UnaryOperator[] Values = UnaryOperator.values();
 
@@ -22,7 +23,8 @@ public enum UnaryOperator {
         switch (this) {
             case Invalid -> throw new InvalidOperationException("Encountered an invalid operator");
             case Length -> throw new InvalidOperationException(String.format("Attempted to get the length of a %s", name));
-            case Negate -> throw new InvalidOperationException(String.format("Attempted to negate a %s", name));
+            case SignedNegate -> throw new InvalidOperationException(String.format("Attempted to negate a %s", name));
+            case UnsignedNegate -> throw new InvalidOperationException(String.format("Attempted to invert a %s", name));
         }
     }
 

@@ -15,6 +15,9 @@ public class NullObject extends VMObject {
     public String GetName() { return "Null"; }
 
     @Override
+    public String toString() { return "null"; }
+
+    @Override
     public int GetSize() { return 1; }
 
     @Override

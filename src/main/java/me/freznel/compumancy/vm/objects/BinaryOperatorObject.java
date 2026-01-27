@@ -5,11 +5,11 @@ import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.EnumCodec;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.StackUnderflowException;
-import me.freznel.compumancy.vm.interfaces.IExecutable;
+import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.operators.BinaryOperator;
 import me.freznel.compumancy.vm.operators.BinaryOperatorSet;
 
-public class BinaryOperatorObject extends VMObject implements IExecutable {
+public class BinaryOperatorObject extends VMObject implements IEvaluatable {
     public static final BuilderCodec<BinaryOperatorObject> CODEC = BuilderCodec.builder(BinaryOperatorObject.class, BinaryOperatorObject::new)
             .append(new KeyedCodec<>("Ref", new EnumCodec<>(BinaryOperator.class)), BinaryOperatorObject::SetOperator, BinaryOperatorObject::GetOperator)
             .add()
@@ -49,7 +49,7 @@ public class BinaryOperatorObject extends VMObject implements IExecutable {
     }
 
     @Override
-    public void Execute(Invocation invocation) {
+    public void Evaluate(Invocation invocation) {
         if (invocation.OperandCount() < 2) throw new StackUnderflowException(operator.toString() + " operator expected at least 2 operands");
         VMObject b = invocation.Pop();
         VMObject a = invocation.Pop();

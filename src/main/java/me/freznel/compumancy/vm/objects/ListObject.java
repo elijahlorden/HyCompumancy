@@ -3,14 +3,16 @@ package me.freznel.compumancy.vm.objects;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
+import me.freznel.compumancy.vm.execution.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.VMException;
+import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.interfaces.IExecutable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class ListObject extends VMObject implements IExecutable {
+public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     public static final BuilderCodec<ListObject> CODEC = BuilderCodec.builder(ListObject.class, ListObject::new)
             .append(new KeyedCodec<>("List", new ArrayCodec<VMObject>(VMObject.CODEC, VMObject[]::new)), ListObject::SetContentsArray, ListObject::GetContentsArray)
             .add()
@@ -78,7 +80,12 @@ public class ListObject extends VMObject implements IExecutable {
     }
 
     @Override
+    public void Evaluate(Invocation invocation) throws VMException {
+        invocation.Push(this.clone()); //May be non-destructive, cloning required
+    }
+
+    @Override
     public void Execute(Invocation invocation) throws VMException {
-        invocation.Push(this.clone());
+        invocation.PushFrame(new ExecutionFrame(this.contents)); //Destructive read, cloning not required
     }
 }

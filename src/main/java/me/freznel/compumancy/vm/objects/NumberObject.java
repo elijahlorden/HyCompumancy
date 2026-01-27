@@ -5,9 +5,9 @@ import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.VMException;
-import me.freznel.compumancy.vm.interfaces.IExecutable;
+import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
-public class NumberObject extends VMObject implements IExecutable {
+public class NumberObject extends VMObject implements IEvaluatable {
     public static final BuilderCodec<NumberObject> CODEC = BuilderCodec.builder(NumberObject.class, NumberObject::new)
             .append(new KeyedCodec<>("Value", Codec.DOUBLE), NumberObject::SetValue, NumberObject::GetValue)
             .add()
@@ -59,7 +59,7 @@ public class NumberObject extends VMObject implements IExecutable {
     }
 
     @Override
-    public void Execute(Invocation invocation) throws VMException {
+    public void Evaluate(Invocation invocation) throws VMException {
         invocation.Push(new NumberObject(value));
     }
 }

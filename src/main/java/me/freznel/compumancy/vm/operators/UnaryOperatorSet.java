@@ -35,11 +35,12 @@ public class UnaryOperatorSet<T extends VMObject> {
         {
             case Invalid -> throw new InvalidOperationException("Encountered invalid operator reference");
             case Length -> set.Length(arg);
-            case Negate -> set.Negate(arg);
+            case SignedNegate -> set.SignedNegate(arg);
+            case UnsignedNegate -> set.UnsignedNegate(arg);
         };
     }
 
     public VMObject Length(T arg) { UnaryOperator.Length.ThrowInvalidOperation(arg); return null; }
-    public VMObject Negate(T arg) { UnaryOperator.Negate.ThrowInvalidOperation(arg); return null; }
-
+    public VMObject SignedNegate(T arg) { UnaryOperator.SignedNegate.ThrowInvalidOperation(arg); return null; }
+    public VMObject UnsignedNegate(T arg) { UnaryOperator.UnsignedNegate.ThrowInvalidOperation(arg); return null; }
 }
