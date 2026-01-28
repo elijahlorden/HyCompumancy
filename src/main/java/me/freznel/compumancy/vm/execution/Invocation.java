@@ -4,6 +4,8 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import me.freznel.compumancy.vm.exceptions.StackOverflowException;
+import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
+import me.freznel.compumancy.vm.execution.frame.Frame;
 import me.freznel.compumancy.vm.objects.VMObject;
 
 import java.util.ArrayList;

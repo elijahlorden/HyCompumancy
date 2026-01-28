@@ -3,7 +3,7 @@ package me.freznel.compumancy.vm.objects;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
-import me.freznel.compumancy.vm.execution.ExecutionFrame;
+import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;

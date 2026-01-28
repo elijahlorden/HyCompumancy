@@ -1,6 +1,7 @@
-package me.freznel.compumancy.vm.execution;
+package me.freznel.compumancy.vm.execution.frame;
 
 import com.hypixel.hytale.codec.lookup.CodecMapCodec;
+import me.freznel.compumancy.vm.execution.Invocation;
 
 public abstract class Frame {
     public static final CodecMapCodec<Frame> CODEC = new CodecMapCodec<>();
