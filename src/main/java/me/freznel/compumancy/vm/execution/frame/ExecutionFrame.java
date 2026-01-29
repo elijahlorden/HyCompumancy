@@ -26,6 +26,13 @@ public class ExecutionFrame extends Frame {
 
     public ExecutionFrame() { this.contents = new ArrayList<>(); index = 0; }
     public ExecutionFrame(ArrayList<VMObject> contents) { this.contents = contents; index = 0; }
+    public ExecutionFrame(ExecutionFrame other) {
+        this.contents = new ArrayList<>(other.contents.size() - other.index);
+        for (int i=other.index; i < other.contents.size(); i++) {
+            this.contents.add(other.contents.get(i).clone());
+        }
+        this.index = 0;
+    }
 
     public int GetIndex() { return index; }
     public void SetIndex(int index) { this.index = index; }
@@ -59,10 +66,15 @@ public class ExecutionFrame extends Frame {
         int budget = invocation.GetExecutionBudget();
         do {
             VMObject next = contents.get(index++);
-            if (!(next instanceof IEvaluatable executableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetName());
-            budget -= executableNext.ExecutionBudgetCost();
-            executableNext.Evaluate(invocation);
+            if (!(next instanceof IEvaluatable evaluatableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetName());
+            budget -= evaluatableNext.ExecutionBudgetCost();
+            evaluatableNext.Evaluate(invocation);
         } while (invocation.GetCurrentFrame() == this && budget > 0 && index < contents.size()); //Execute until another frame is pushed or the budget runs out
         invocation.SetExecutionBudget(budget);
+    }
+
+    @Override
+    public Frame clone() {
+        return new ExecutionFrame(this);
     }
 }

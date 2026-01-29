@@ -5,7 +5,6 @@ import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import me.freznel.compumancy.vm.compiler.Compiler;
-import me.freznel.compumancy.vm.compiler.Tokenizer;
 import me.freznel.compumancy.vm.execution.Invocation;
 
 import javax.annotation.Nonnull;
@@ -34,7 +33,7 @@ public class TestCommand extends CommandBase {
             var world = sender.getStore().getExternalData().getWorld();
 
             var invocation = new Invocation(world, sender, program, 1000);
-            invocation.Run();
+            invocation.Step();
 
             var resultStack = invocation.GetOperandStack();
             StringBuilder sb = new StringBuilder();

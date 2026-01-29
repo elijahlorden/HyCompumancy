@@ -8,7 +8,7 @@ public class DropAction extends VMAction {
 
     @Override
     public int ExecutionBudgetCost() {
-        return 2;
+        return 1;
     }
 
     @Override

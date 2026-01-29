@@ -5,8 +5,11 @@ import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 
 public class NullObject extends VMObject {
+    public static final NullObject NULL = new NullObject();
+
     public static final BuilderCodec<NumberObject> CODEC = BuilderCodec.builder(NumberObject.class, NumberObject::new)
             .build();
+
     static {
         VMObject.CODEC.register("Null", NullObject.class, CODEC);
     }

@@ -1,6 +1,8 @@
 package me.freznel.compumancy.vm;
 
 import me.freznel.compumancy.vm.actions.VMAction;
+import me.freznel.compumancy.vm.actions.entity.GetCasterAction;
+import me.freznel.compumancy.vm.actions.entity.SendMessageAction;
 import me.freznel.compumancy.vm.actions.stack.DropAction;
 import me.freznel.compumancy.vm.actions.stack.DuplicateAction;
 import me.freznel.compumancy.vm.actions.stack.EvalAction;
@@ -78,6 +80,12 @@ public class RegisterVMObjects {
         VMAction.Register("eval", new EvalAction());
         Vocabulary.Register("eval", new Word(new ActionObject(EvalAction.class)));
 
+        //Entity actions
+        VMAction.Register("caster", new GetCasterAction());
+        Vocabulary.Register("caster", new Word(new ActionObject(GetCasterAction.class)));
+
+        VMAction.Register("send-message", new SendMessageAction());
+        Vocabulary.Register("send-message", new Word(new ActionObject(SendMessageAction.class)));
 
     }
 

@@ -5,15 +5,18 @@ import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.entity.reference.PersistentRef;
+import com.hypixel.hytale.server.core.modules.entity.component.DisplayNameComponent;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import me.freznel.compumancy.Compumancy;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
 import javax.xml.stream.events.EndElement;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class EntityRefObject extends VMObject implements IEvaluatable {
     public static final BuilderCodec<EntityRefObject> CODEC = BuilderCodec.builder(EntityRefObject.class, EntityRefObject::new)
@@ -52,7 +55,12 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
     public Ref<EntityStore> GetEntity() {
         if (GetWorld() == null || persistentRef == null || !persistentRef.isValid()) return null;
         if (ref == null || !ref.isValid()) {
-            ref = persistentRef.getEntity(world.getEntityStore().getStore());
+            final var store = world.getEntityStore().getStore();
+            if (store.isInThread()) {
+                ref = persistentRef.getEntity(store);
+            } else {
+                ref = CompletableFuture.supplyAsync(() -> persistentRef.getEntity(store)).join();
+            }
             if (ref == null || !ref.isValid()) return null;
         }
         return ref;
@@ -66,6 +74,32 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
     @Override
     public String GetName() {
         return "Entity";
+    }
+
+    @Override
+    public String toString() {
+        if (GetWorld() == null) return "Unloaded Entity";
+        var ref = GetEntity();
+        if (ref == null) return "Unloaded Entity";
+        var store = ref.getStore();
+        String name = null;
+        if (store.isInThread()) {
+            var c = store.getComponent(ref, DisplayNameComponent.getComponentType());
+            if (c != null) {
+                var msg = c.getDisplayName();
+                if (msg != null) name = msg.getAnsiMessage();
+            }
+        } else {
+            name = CompletableFuture.supplyAsync(() -> {
+                var c = store.getComponent(ref, DisplayNameComponent.getComponentType());
+                if (c != null) {
+                    var msg = c.getDisplayName();
+                    if (msg != null) return msg.getAnsiMessage();
+                }
+                return null;
+            }, world).join();
+        }
+        return (name != null && !name.trim().isEmpty()) ? name : "Unnamed Entity";
     }
 
     @Override
@@ -86,5 +120,24 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
         invocation.Push(new EntityRefObject(this));
+    }
+
+    public static EntityRefObject FromRef(Ref<EntityStore> ref) {
+        EntityRefObject obj = new EntityRefObject();
+        obj.ref = ref;
+        var store = ref.getStore();
+        obj.world = store.getExternalData().getWorld();
+        obj.worldId = obj.world.getWorldConfig().getUuid();
+        if (store.isInThread()) {
+            obj.persistentRef = new PersistentRef();
+            obj.persistentRef.setEntity(ref, store);
+        } else {
+            obj.persistentRef = CompletableFuture.supplyAsync(() -> {
+                var pref = new PersistentRef();
+                pref.setEntity(ref, store);
+                return pref;
+            }, obj.world).join();
+        }
+        return obj;
     }
 }

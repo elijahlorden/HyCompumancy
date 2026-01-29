@@ -41,6 +41,13 @@ public class NumericIteratorFrame extends IteratorFrame {
         this.current = start;
         this.evaluatable = evaluatable;
     }
+    public NumericIteratorFrame(NumericIteratorFrame other) {
+        this.start = other.start;
+        this.end = other.end;
+        this.inc = other.inc;
+        this.current = other.current;
+        this.evaluatable = other.evaluatable.clone();
+    }
 
     public VMObject GetEvaluatable() { return evaluatable; }
     public void SetEvaluatable(VMObject evaluatable) { this.evaluatable = evaluatable; }
@@ -74,5 +81,10 @@ public class NumericIteratorFrame extends IteratorFrame {
             else if (evaluatable instanceof IEvaluatable eval) eval.Evaluate(invocation);
         }
         current += inc;
+    }
+
+    @Override
+    public Frame clone() {
+        return new NumericIteratorFrame(this);
     }
 }
