@@ -19,10 +19,6 @@ public class ActionObject extends VMObject implements IEvaluatable {
             .add()
             .build();
 
-    static {
-        VMObject.CODEC.register("ACT", ActionObject.class, CODEC);
-    }
-
     private String actionName;
     private VMAction Ref;
 
@@ -47,13 +43,13 @@ public class ActionObject extends VMObject implements IEvaluatable {
     public void SetActionName(String actionName) { Ref = VMAction.GetAction(actionName); this.actionName = actionName; }
 
     @Override
-    public String GetName() { return "Action"; }
+    public String GetObjectName() { return "Action"; }
 
     @Override
     public String toString() { return (actionName != null && !actionName.isEmpty()) ? "Action: " + actionName : "Action"; }
 
     @Override
-    public int GetSize() { return 1; }
+    public int GetObjectSize() { return 1; }
 
     @Override
     public VMObject clone() {
@@ -69,5 +65,10 @@ public class ActionObject extends VMObject implements IEvaluatable {
     public void Evaluate(Invocation invocation) throws VMException {
         if (Ref == null) throw new InvalidActionException(String.format("The action '%s' was not found", actionName));
         Ref.Execute(invocation);
+    }
+
+    @Override
+    public boolean IsEvalSynchronous() {
+        return Ref != null && Ref.ExecuteSynchronous();
     }
 }

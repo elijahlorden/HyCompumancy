@@ -19,7 +19,11 @@ import java.util.*;
 
 public class InvocationComponent implements Component<EntityStore> {
     public static final BuilderCodec<InvocationComponent> CODEC = BuilderCodec.builder(InvocationComponent.class, InvocationComponent::new)
-            .append(new KeyedCodec<>("Map", new MapCodec<>(InvocationState.CODEC, HashMap::new)), (o, v) -> o.invocations = v, o -> o.invocations)
+            .append(new KeyedCodec<>("Map", new MapCodec<>(InvocationState.CODEC, HashMap::new)),
+                    (o, v) -> {
+                        if (!v.isEmpty()) o.invocations.putAll(v);
+                    },
+                    o -> o.invocations)
             .add()
             .append(new KeyedCodec<>("Max", Codec.INTEGER), (o, v) -> o.max = v == null ? 0 : v, o -> o.max)
             .add()
@@ -37,6 +41,9 @@ public class InvocationComponent implements Component<EntityStore> {
     }
 
     public boolean IsFull() { return invocations.size() >= max; }
+
+    public int getMaxInvocations() { return max; }
+    public void SetMaxInvocations(int max) { this.max = max; }
 
     public boolean Add(Invocation invocation) {
         if (IsFull()) return false;
@@ -58,6 +65,10 @@ public class InvocationComponent implements Component<EntityStore> {
         if (!invocations.containsKey(id)) return false;
         invocations.replace(id, state);
         return true;
+    }
+
+    public void RemoveAll() {
+        invocations.clear();
     }
 
     @Override

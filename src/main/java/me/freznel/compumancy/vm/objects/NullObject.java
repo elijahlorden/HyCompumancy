@@ -10,18 +10,14 @@ public class NullObject extends VMObject {
     public static final BuilderCodec<NumberObject> CODEC = BuilderCodec.builder(NumberObject.class, NumberObject::new)
             .build();
 
-    static {
-        VMObject.CODEC.register("Null", NullObject.class, CODEC);
-    }
-
     @Override
-    public String GetName() { return "Null"; }
+    public String GetObjectName() { return "Null"; }
 
     @Override
     public String toString() { return "null"; }
 
     @Override
-    public int GetSize() { return 1; }
+    public int GetObjectSize() { return 1; }
 
     @Override
     public VMObject clone() {

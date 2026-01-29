@@ -22,7 +22,7 @@ public class EvalAction extends VMAction {
         } else if (a instanceof IEvaluatable evaluatable) { //Fall back to IEvaluatable
             evaluatable.Evaluate(invocation);
         } else {
-            throw new InvalidOperationException(String.format("eval: Unable to evaluate %s", a.GetName()));
+            throw new InvalidOperationException(String.format("eval: Unable to evaluate %s", a.GetObjectName()));
         }
     }
 }

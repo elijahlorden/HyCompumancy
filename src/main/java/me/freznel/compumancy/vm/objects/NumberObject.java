@@ -13,10 +13,6 @@ public class NumberObject extends VMObject implements IEvaluatable {
             .add()
             .build();
 
-    static {
-        VMObject.CODEC.register("Number", NumberObject.class, CODEC);
-    }
-
     private double value;
 
     public NumberObject() { super(); }
@@ -35,12 +31,12 @@ public class NumberObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public String GetName() {
+    public String GetObjectName() {
         return "Number";
     }
 
     @Override
-    public int GetSize() { return 1; }
+    public int GetObjectSize() { return 1; }
 
     @Override
     public String toString()
@@ -61,5 +57,10 @@ public class NumberObject extends VMObject implements IEvaluatable {
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
         invocation.Push(new NumberObject(value));
+    }
+
+    @Override
+    public boolean IsEvalSynchronous() {
+        return false;
     }
 }

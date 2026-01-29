@@ -3,12 +3,12 @@ package me.freznel.compumancy.vm;
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.actions.entity.GetCasterAction;
 import me.freznel.compumancy.vm.actions.entity.SendMessageAction;
-import me.freznel.compumancy.vm.actions.stack.DropAction;
-import me.freznel.compumancy.vm.actions.stack.DuplicateAction;
-import me.freznel.compumancy.vm.actions.stack.EvalAction;
-import me.freznel.compumancy.vm.actions.stack.SelectAction;
+import me.freznel.compumancy.vm.actions.stack.*;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
+import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
+import me.freznel.compumancy.vm.execution.frame.Frame;
+import me.freznel.compumancy.vm.execution.frame.NumericIteratorFrame;
 import me.freznel.compumancy.vm.objects.*;
 import me.freznel.compumancy.vm.operators.*;
 import me.freznel.compumancy.vm.operators.binary.*;
@@ -38,8 +38,26 @@ public class RegisterVMObjects {
         Vocabulary.Register("or", new Word(new BinaryOperatorObject(BinaryOperator.Or)));
         Vocabulary.Register("xor", new Word(new BinaryOperatorObject(BinaryOperator.Xor)));
 
+        RegisterCodecs();
         RegisterOperatorSets();
         RegisterActions();
+    }
+
+    private static void RegisterCodecs() {
+        //Objects
+        VMObject.CODEC.register("EntityRef", EntityRefObject.class, EntityRefObject.CODEC);
+        VMObject.CODEC.register("Bool", BoolObject.class, BoolObject.CODEC);
+        VMObject.CODEC.register("ACT", ActionObject.class, ActionObject.CODEC);
+        VMObject.CODEC.register("OP2", BinaryOperatorObject.class, BinaryOperatorObject.CODEC);
+        VMObject.CODEC.register("List", ListObject.class, ListObject.CODEC);
+        VMObject.CODEC.register("Null", NullObject.class, NullObject.CODEC);
+        VMObject.CODEC.register("Number", NumberObject.class, NumberObject.CODEC);
+        VMObject.CODEC.register("OP1", UnaryOperatorObject.class, UnaryOperatorObject.CODEC);
+
+        //Frames
+        Frame.CODEC.register("Exe", ExecutionFrame.class, ExecutionFrame.CODEC);
+        Frame.CODEC.register("Numeric", NumericIteratorFrame.class, NumericIteratorFrame.CODEC);
+
     }
 
     private static void RegisterOperatorSets() {
@@ -61,31 +79,31 @@ public class RegisterVMObjects {
 
     }
 
+    private static void RegisterSimpleAction(String word, Class<? extends VMAction> cls, VMAction action) {
+        VMAction.Register(word, action);
+        Vocabulary.Register(word, new Word(new ActionObject(cls)));
+    }
+
     private static void RegisterActions() {
         //Stack actions
-        VMAction.Register("dup", new DuplicateAction());
-        Vocabulary.Register("dup", new Word(new ActionObject(DuplicateAction.class)));
-
-        VMAction.Register("drop", new DropAction());
-        Vocabulary.Register("drop", new Word(new ActionObject(DropAction.class)));
+        RegisterSimpleAction("dup", DuplicateAction.class, new DuplicateAction());
+        RegisterSimpleAction("drop", DropAction.class, new DropAction());
+        RegisterSimpleAction("swap", SwapAction.class, new SwapAction());
+        RegisterSimpleAction("over", OverAction.class, new OverAction());
 
         //Logic actions
         Vocabulary.Register("true", new Word(BoolObject.TRUE));
         Vocabulary.Register("false", new Word(BoolObject.FALSE));
 
-        VMAction.Register("?", new SelectAction());
-        Vocabulary.Register("?", new Word(new ActionObject(SelectAction.class)));
+        RegisterSimpleAction("?", SelectAction.class, new SelectAction());
 
         //Flow control actions
-        VMAction.Register("eval", new EvalAction());
-        Vocabulary.Register("eval", new Word(new ActionObject(EvalAction.class)));
+        RegisterSimpleAction("eval", EvalAction.class, new EvalAction());
+        RegisterSimpleAction("for", ForAction.class, new ForAction());
 
         //Entity actions
-        VMAction.Register("caster", new GetCasterAction());
-        Vocabulary.Register("caster", new Word(new ActionObject(GetCasterAction.class)));
-
-        VMAction.Register("send-message", new SendMessageAction());
-        Vocabulary.Register("send-message", new Word(new ActionObject(SendMessageAction.class)));
+        RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
+        RegisterSimpleAction("send-message", SendMessageAction.class, new SendMessageAction());
 
     }
 

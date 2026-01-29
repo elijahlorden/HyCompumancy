@@ -41,4 +41,6 @@ public abstract class VMAction {
 
     public abstract void Execute(Invocation invocation);
 
+    public boolean ExecuteSynchronous() { return false; }
+
 }

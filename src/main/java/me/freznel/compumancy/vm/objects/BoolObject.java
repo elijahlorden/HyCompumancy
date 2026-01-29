@@ -16,10 +16,6 @@ public class BoolObject extends VMObject implements IEvaluatable {
     public static final BoolObject TRUE = new BoolObject(true);
     public static final BoolObject FALSE = new BoolObject(false);
 
-    static {
-        VMObject.CODEC.register("Bool", BoolObject.class, CODEC);
-    }
-
     private boolean value;
 
     public BoolObject() { }
@@ -38,12 +34,12 @@ public class BoolObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public String GetName() {
+    public String GetObjectName() {
         return "Boolean";
     }
 
     @Override
-    public int GetSize() { return 1; }
+    public int GetObjectSize() { return 1; }
 
     @Override
     public String toString()
@@ -64,5 +60,10 @@ public class BoolObject extends VMObject implements IEvaluatable {
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
         invocation.Push(new BoolObject(value));
+    }
+
+    @Override
+    public boolean IsEvalSynchronous() {
+        return false;
     }
 }

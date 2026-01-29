@@ -41,6 +41,6 @@ public class ForAction extends VMAction {
     }
 
     private static InvalidOperationException OperandException(VMObject a, VMObject b, VMObject c) {
-        return new InvalidOperationException(String.format("for: expected Number Number Evaluatable, got %s %s %s", a.GetName(), b.GetName(), c.GetName()));
+        return new InvalidOperationException(String.format("for: expected Number Number Evaluatable, got %s %s %s", a.GetObjectName(), b.GetObjectName(), c.GetObjectName()));
     }
 }

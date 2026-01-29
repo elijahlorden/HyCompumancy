@@ -23,10 +23,6 @@ public class NumericIteratorFrame extends IteratorFrame {
             .add()
             .build();
 
-    static {
-        Frame.CODEC.register("Numeric", ExecutionFrame.class, CODEC);
-    }
-
     private VMObject evaluatable;
     private int start;
     private int end;
@@ -66,14 +62,14 @@ public class NumericIteratorFrame extends IteratorFrame {
 
     @Override
     public int GetSize() {
-        return evaluatable.GetSize();
+        return evaluatable.GetObjectSize();
     }
 
     @Override
     public boolean IsFinished() { return inc == 0 || ((inc > 0) ? current > end : current < end); }
 
     @Override
-    public void Execute(Invocation invocation) {
+    public void Execute(Invocation invocation, long interruptAt) {
         if (IsFinished()) return;
         if (evaluatable != null) {
             invocation.Push(new NumberObject(current));

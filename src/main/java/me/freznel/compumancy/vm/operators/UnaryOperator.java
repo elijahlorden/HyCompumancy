@@ -19,7 +19,7 @@ public enum UnaryOperator {
 
     public <T extends VMObject> void ThrowInvalidOperation(T arg)
     {
-        String name = arg.GetName();
+        String name = arg.GetObjectName();
         switch (this) {
             case Invalid -> throw new InvalidOperationException("Encountered an invalid operator");
             case Length -> throw new InvalidOperationException(String.format("Attempted to get the length of a %s", name));

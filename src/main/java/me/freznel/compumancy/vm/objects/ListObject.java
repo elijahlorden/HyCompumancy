@@ -18,10 +18,6 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
             .add()
             .build();
 
-    static {
-        VMObject.CODEC.register("List", ListObject.class, CODEC);
-    }
-
     private ArrayList<VMObject> contents;
 
     public ListObject() { contents = new ArrayList<>(); }
@@ -37,16 +33,16 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     }
 
     @Override
-    public String GetName() {
+    public String GetObjectName() {
         return "List";
     }
 
     @Override
-    public int GetSize() {
+    public int GetObjectSize() {
         if (contents == null) return 0;
         int size = 0;
         for (VMObject obj : contents) {
-            size += obj.GetSize();
+            size += obj.GetObjectSize();
         }
         return size;
     }
@@ -82,6 +78,11 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
         invocation.Push(this.clone()); //May be non-destructive, cloning required
+    }
+
+    @Override
+    public boolean IsEvalSynchronous() {
+        return false;
     }
 
     @Override

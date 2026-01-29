@@ -21,7 +21,7 @@ public class SelectAction extends VMAction {
         var c = invocation.Pop();
         var b = invocation.Pop();
         var a = invocation.Pop();
-        if (!(a instanceof BoolObject boolObject)) throw new InvalidOperationException(String.format("? expected Boolean * *, got %s %s %s", a.GetName(), b.GetName(), c.GetName()));
+        if (!(a instanceof BoolObject boolObject)) throw new InvalidOperationException(String.format("? expected Boolean * *, got %s %s %s", a.GetObjectName(), b.GetObjectName(), c.GetObjectName()));
         invocation.Push(boolObject.GetValue() ? b : c); //Destructive read, no need to clone
     }
 }

@@ -17,6 +17,8 @@ import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import javax.xml.stream.events.EndElement;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 public class EntityRefObject extends VMObject implements IEvaluatable {
     public static final BuilderCodec<EntityRefObject> CODEC = BuilderCodec.builder(EntityRefObject.class, EntityRefObject::new)
@@ -26,14 +28,14 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
             .add()
             .build();
 
-    static {
-        VMObject.CODEC.register("EntityRef", EntityRefObject.class, CODEC);
-    }
-
     private UUID worldId;
     private PersistentRef persistentRef;
+
     private World world;
     private Ref<EntityStore> ref;
+
+    private String displayNameCache;
+    private long displayNameCacheInvalidOn;
 
     public EntityRefObject() { }
     public EntityRefObject(EntityRefObject other) {
@@ -41,6 +43,8 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
         this.persistentRef = other.persistentRef;
         this.world = other.world;
         this.ref = other.ref;
+        this.displayNameCache = other.displayNameCache;
+        this.displayNameCacheInvalidOn = other.displayNameCacheInvalidOn;
     }
 
     public World GetWorld() {
@@ -71,39 +75,57 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
     public UUID GetWorldId() { return this.worldId; }
     public void SetWorldId(UUID worldId) { this.worldId = worldId; world = null; ref = null; }
 
+    public <T> T InvokeSafe(Supplier<T> supplier) {
+        if (GetWorld() == null) return null;
+        T result = null;
+        if (world.isInThread()) {
+            result = supplier.get();
+        } else {
+            result = CompletableFuture.supplyAsync(supplier, world).join();
+        }
+        return result;
+    }
+
+    public void InvokeSafe(Runnable runnable) {
+        if (GetWorld() == null) return;
+        if (world.isInThread()) {
+            runnable.run();
+        } else {
+            CompletableFuture.runAsync(runnable, world).join();
+        }
+    }
+
+    public String GetDisplayName() {
+        if (displayNameCache != null && System.currentTimeMillis() < displayNameCacheInvalidOn) return displayNameCache;
+        var ref = GetEntity();
+        if (ref == null) return "";
+        var store = ref.getStore();
+        var result =  InvokeSafe(() -> {
+            var c = store.getComponent(ref, DisplayNameComponent.getComponentType());
+            if (c == null) return "";
+            var msg = c.getDisplayName();
+            if (msg == null) return "";
+            return msg.getAnsiMessage();
+        });
+        displayNameCache = result;
+        displayNameCacheInvalidOn = System.currentTimeMillis() + 30000;
+        return result;
+    }
+
     @Override
-    public String GetName() {
+    public String GetObjectName() {
         return "Entity";
     }
 
     @Override
     public String toString() {
-        if (GetWorld() == null) return "Unloaded Entity";
-        var ref = GetEntity();
-        if (ref == null) return "Unloaded Entity";
-        var store = ref.getStore();
-        String name = null;
-        if (store.isInThread()) {
-            var c = store.getComponent(ref, DisplayNameComponent.getComponentType());
-            if (c != null) {
-                var msg = c.getDisplayName();
-                if (msg != null) name = msg.getAnsiMessage();
-            }
-        } else {
-            name = CompletableFuture.supplyAsync(() -> {
-                var c = store.getComponent(ref, DisplayNameComponent.getComponentType());
-                if (c != null) {
-                    var msg = c.getDisplayName();
-                    if (msg != null) return msg.getAnsiMessage();
-                }
-                return null;
-            }, world).join();
-        }
-        return (name != null && !name.trim().isEmpty()) ? name : "Unnamed Entity";
+        String displayName = GetDisplayName();
+        if (displayName == null) return "Entity [Unnamed]";
+        return String.format("Entity [%s]", displayName);
     }
 
     @Override
-    public int GetSize() {
+    public int GetObjectSize() {
         return 1;
     }
 
@@ -120,6 +142,11 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
         invocation.Push(new EntityRefObject(this));
+    }
+
+    @Override
+    public boolean IsEvalSynchronous() {
+        return false;
     }
 
     public static EntityRefObject FromRef(Ref<EntityStore> ref) {

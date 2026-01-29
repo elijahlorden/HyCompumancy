@@ -5,14 +5,11 @@ import com.hypixel.hytale.codec.lookup.CodecMapCodec;
 public abstract class VMObject implements Cloneable {
     public static final CodecMapCodec<VMObject> CODEC = new CodecMapCodec<>();
 
-    public abstract String GetName();
-    public abstract int GetSize();
+    public abstract String GetObjectName();
+    public abstract int GetObjectSize();
 
     @Override
-    public String toString()
-    {
-        return "Object";
-    }
+    public abstract String toString();
 
     @Override
     public abstract VMObject clone();

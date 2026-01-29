@@ -23,15 +23,17 @@ public class SendMessageAction extends VMAction {
         if (invocation.OperandCount() < 2) throw new StackUnderflowException("player:send-message: expected at least 2 operands");
         var b = invocation.Pop(); //Any
         var a = invocation.Pop(); //EntityRefObject
-        if (!(a instanceof EntityRefObject refObj)) throw new InvalidOperationException("player:send-message: expected Entity, got " + a.GetName());
-        final Ref<EntityStore> ref = refObj.GetEntity();
-        if (ref == null || !ref.isValid()) return;
-        final var store = ref.getStore();
+        if (!(a instanceof EntityRefObject refObj)) throw new InvalidOperationException("player:send-message: expected Entity, got " + a.GetObjectName());
         final String message = b.toString();
+        var world = refObj.GetWorld();
+        if (world == null) return;
 
-        CompletableFuture.runAsync(() -> {
+        world.execute(() -> {
+            final Ref<EntityStore> ref = refObj.GetEntity();
+            if (ref == null || !ref.isValid()) return;
+            final var store = ref.getStore();
             var player = store.getComponent(ref, Player.getComponentType());
             if (player != null) player.sendMessage(Message.raw(message));
-        }, store.getExternalData().getWorld()).join();
+        });
     }
 }

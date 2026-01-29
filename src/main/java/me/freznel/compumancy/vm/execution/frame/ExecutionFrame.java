@@ -17,10 +17,6 @@ public class ExecutionFrame extends Frame {
             .add()
             .build();
 
-    static {
-        Frame.CODEC.register("Exe", ExecutionFrame.class, CODEC);
-    }
-
     private ArrayList<VMObject> contents;
     private int index;
 
@@ -60,17 +56,17 @@ public class ExecutionFrame extends Frame {
     public boolean IsFinished() { return contents.isEmpty() || index >= contents.size(); }
 
     @Override
-    public void Execute(Invocation invocation)
+    public void Execute(Invocation invocation, long interruptAt)
     {
         if (IsFinished()) return;
-        int budget = invocation.GetExecutionBudget();
+        int budget = invocation.GetCurrentExecutionBudget();
         do {
             VMObject next = contents.get(index++);
-            if (!(next instanceof IEvaluatable evaluatableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetName());
+            if (!(next instanceof IEvaluatable evaluatableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetObjectName());
             budget -= evaluatableNext.ExecutionBudgetCost();
             evaluatableNext.Evaluate(invocation);
         } while (invocation.GetCurrentFrame() == this && budget > 0 && index < contents.size()); //Execute until another frame is pushed or the budget runs out
-        invocation.SetExecutionBudget(budget);
+        invocation.SetCurrentExecutionBudget(budget);
     }
 
     @Override

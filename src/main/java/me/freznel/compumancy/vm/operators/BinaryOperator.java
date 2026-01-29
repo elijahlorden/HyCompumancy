@@ -23,7 +23,7 @@ public enum BinaryOperator {
         return Values[i];
     }
 
-    public <T extends VMObject, K extends VMObject> void  StandardException(String s, T left, K right) { throw new InvalidOperationException(String.format("Attempted to %s %s and %s", s, left.GetName(), right.GetName())); }
+    public <T extends VMObject, K extends VMObject> void  StandardException(String s, T left, K right) { throw new InvalidOperationException(String.format("Attempted to %s %s and %s", s, left.GetObjectName(), right.GetObjectName())); }
 
     public <T extends VMObject, K extends VMObject> void ThrowInvalidOperation(T left, K right)
     {

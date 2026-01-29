@@ -10,5 +10,6 @@ public interface IEvaluatable {
 
     public int ExecutionBudgetCost();
     public void Evaluate(Invocation invocation) throws VMException;
+    public boolean IsEvalSynchronous();
 
 }

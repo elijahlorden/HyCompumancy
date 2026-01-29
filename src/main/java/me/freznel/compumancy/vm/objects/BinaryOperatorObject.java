@@ -15,10 +15,6 @@ public class BinaryOperatorObject extends VMObject implements IEvaluatable {
             .add()
             .build();
 
-    static {
-        VMObject.CODEC.register("OP2", BinaryOperatorObject.class, CODEC);
-    }
-
     private BinaryOperator operator;
 
     public BinaryOperatorObject() { }
@@ -28,10 +24,10 @@ public class BinaryOperatorObject extends VMObject implements IEvaluatable {
     public void SetOperator(BinaryOperator operator) { this.operator = operator; }
 
     @Override
-    public String GetName() { return "BinaryOperator"; }
+    public String GetObjectName() { return "BinaryOperator"; }
 
     @Override
-    public int GetSize() { return 1; }
+    public int GetObjectSize() { return 1; }
 
     @Override
     public String toString() {
@@ -54,5 +50,10 @@ public class BinaryOperatorObject extends VMObject implements IEvaluatable {
         VMObject b = invocation.Pop();
         VMObject a = invocation.Pop();
         invocation.Push(BinaryOperatorSet.Operate(operator, a, b));
+    }
+
+    @Override
+    public boolean IsEvalSynchronous() {
+        return false;
     }
 }

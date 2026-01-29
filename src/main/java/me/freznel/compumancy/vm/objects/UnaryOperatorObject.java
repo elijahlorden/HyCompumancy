@@ -15,10 +15,6 @@ public class UnaryOperatorObject extends VMObject implements IEvaluatable {
             .add()
             .build();
 
-    static {
-        VMObject.CODEC.register("OP1", UnaryOperatorObject.class, CODEC);
-    }
-
     private UnaryOperator operator;
 
     public UnaryOperatorObject() { }
@@ -28,10 +24,10 @@ public class UnaryOperatorObject extends VMObject implements IEvaluatable {
     public void SetOperator(UnaryOperator operator) { this.operator = operator; }
 
     @Override
-    public String GetName() { return "UnaryOperator"; }
+    public String GetObjectName() { return "UnaryOperator"; }
 
     @Override
-    public int GetSize() { return 1; }
+    public int GetObjectSize() { return 1; }
 
     @Override
     public String toString() {
@@ -53,5 +49,10 @@ public class UnaryOperatorObject extends VMObject implements IEvaluatable {
         if (invocation.OperandCount() < 2) throw new StackUnderflowException(operator.toString() + " operator expected at least 1 operand");
         VMObject a = invocation.Pop();
         invocation.Push(UnaryOperatorSet.Operate(operator, a));
+    }
+
+    @Override
+    public boolean IsEvalSynchronous() {
+        return false;
     }
 }

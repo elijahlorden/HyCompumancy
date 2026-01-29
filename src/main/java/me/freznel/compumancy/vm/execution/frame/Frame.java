@@ -8,7 +8,7 @@ public abstract class Frame implements Cloneable {
 
     public abstract int GetSize();
     public abstract boolean IsFinished();
-    public abstract void Execute(Invocation invocation);
+    public abstract void Execute(Invocation invocation, long interruptAt);
 
     @Override
     public abstract Frame clone();

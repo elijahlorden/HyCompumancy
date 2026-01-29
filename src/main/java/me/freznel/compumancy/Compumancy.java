@@ -6,11 +6,16 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.util.concurrent.ThreadUtil;
 import me.freznel.compumancy.casting.InvocationComponent;
 import me.freznel.compumancy.vm.RegisterVMObjects;
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.actions.stack.DuplicateAction;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class Compumancy extends JavaPlugin {
@@ -19,9 +24,13 @@ public class Compumancy extends JavaPlugin {
     private static Compumancy instance;
     public static Compumancy Get() { return instance; }
 
+    private ScheduledExecutorService executor;
+    public void Schedule(Runnable runnable, long delay) {
+        executor.schedule(runnable, delay, TimeUnit.MILLISECONDS);
+    }
+
     private ComponentType<EntityStore, InvocationComponent> invocationComponentType;
     public ComponentType<EntityStore, InvocationComponent> GetInvocationComponentType() { return invocationComponentType; }
-
 
     public Compumancy(JavaPluginInit init) {
         super(init);
@@ -32,12 +41,20 @@ public class Compumancy extends JavaPlugin {
     @Override
     protected void setup() {
         LOGGER.at(Level.INFO).log("Running setup");
+        executor = Executors.newScheduledThreadPool(4);
+
+
         RegisterVMObjects.Register();
         ComponentRegistryProxy<EntityStore> entityStoreComponentRegistry = this.getEntityStoreRegistry();
 
         invocationComponentType = entityStoreComponentRegistry.registerComponent(InvocationComponent.class, "InvocationComponent", InvocationComponent.CODEC);
 
         this.getCommandRegistry().registerCommand(new TestCommand(this.getName()));
+    }
+
+    @Override
+    protected void shutdown() {
+        executor.shutdown();
     }
 
 

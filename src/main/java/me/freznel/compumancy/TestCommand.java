@@ -4,10 +4,12 @@ import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
+import me.freznel.compumancy.casting.InvocationComponent;
 import me.freznel.compumancy.vm.compiler.Compiler;
 import me.freznel.compumancy.vm.execution.Invocation;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This is an example command that will simply print the name of the plugin in chat when used.
@@ -31,9 +33,38 @@ public class TestCommand extends CommandBase {
             var sender = ctx.senderAsPlayerRef();
             assert sender != null;
             var world = sender.getStore().getExternalData().getWorld();
+            var store = world.getEntityStore().getStore();
 
             var invocation = new Invocation(world, sender, program, 1000);
-            invocation.Step();
+
+            CompletableFuture.runAsync(() -> {
+                var invocationComponentType = Compumancy.Get().GetInvocationComponentType();
+                var invocationComponent = store.getComponent(sender, invocationComponentType);
+                if (invocationComponent == null) {
+                    invocationComponent = store.addComponent(sender, invocationComponentType);
+                }
+                invocationComponent.SetMaxInvocations(5);
+                invocationComponent.RemoveAll();
+
+                invocationComponent.Add(invocation);
+                invocation.Start();
+            }, world).handle((_, e) -> {
+
+
+                return null;
+            });
+
+
+
+
+
+
+
+
+
+
+
+            /*invocation.Step();
 
             var resultStack = invocation.GetOperandStack();
             StringBuilder sb = new StringBuilder();
@@ -46,7 +77,7 @@ public class TestCommand extends CommandBase {
             sb.append("-- Bottom of stack --");
             ctx.sendMessage(Message.raw(sb.toString()));
 
-            ctx.sendMessage(Message.raw("Done"));
+            ctx.sendMessage(Message.raw("Done"));*/
         } catch (Exception e) {
             ctx.sendMessage(Message.raw(e.getClass().getSimpleName() + ": " + e.getMessage()));
         }
