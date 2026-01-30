@@ -1,9 +1,7 @@
 package me.freznel.compumancy.vm;
 
 import me.freznel.compumancy.vm.actions.VMAction;
-import me.freznel.compumancy.vm.actions.entity.GetCasterAction;
-import me.freznel.compumancy.vm.actions.entity.GetEntityPositionAction;
-import me.freznel.compumancy.vm.actions.entity.SendMessageAction;
+import me.freznel.compumancy.vm.actions.entity.*;
 import me.freznel.compumancy.vm.actions.stack.*;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
@@ -105,6 +103,10 @@ public class RegisterVMObjects {
         RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
         RegisterSimpleAction("send-message", SendMessageAction.class, new SendMessageAction());
         RegisterSimpleAction("entity:get-position", GetEntityPositionAction.class, new GetEntityPositionAction());
+        RegisterSimpleAction("entity:get-rotation", GetEntityRotationAction.class, new GetEntityRotationAction());
+        RegisterSimpleAction("entity:get-velocity", GetEntityVelocityAction.class, new GetEntityVelocityAction());
+        RegisterSimpleAction("entity:get-head-position", GetEntityHeadPositionAction.class, new GetEntityHeadPositionAction());
+        RegisterSimpleAction("entity:get-look", GetEntityHeadRotationAction.class, new GetEntityHeadRotationAction());
 
     }
 
