@@ -9,7 +9,7 @@ import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.operators.UnaryOperator;
 import me.freznel.compumancy.vm.operators.UnaryOperatorSet;
 
-public class UnaryOperatorObject extends VMObject implements IEvaluatable {
+public final class UnaryOperatorObject extends VMObject implements IEvaluatable {
     public static final BuilderCodec<UnaryOperatorObject> CODEC = BuilderCodec.builder(UnaryOperatorObject.class, UnaryOperatorObject::new)
             .append(new KeyedCodec<>("Ref", new EnumCodec<>(UnaryOperator.class)), UnaryOperatorObject::SetOperator, UnaryOperatorObject::GetOperator)
             .add()
@@ -21,7 +21,7 @@ public class UnaryOperatorObject extends VMObject implements IEvaluatable {
     public UnaryOperatorObject(UnaryOperator operator) { this.operator = operator; }
 
     public UnaryOperator GetOperator() { return operator; }
-    public void SetOperator(UnaryOperator operator) { this.operator = operator; }
+    private void SetOperator(UnaryOperator operator) { this.operator = operator; }
 
     @Override
     public String GetObjectName() { return "UnaryOperator"; }
@@ -36,7 +36,7 @@ public class UnaryOperatorObject extends VMObject implements IEvaluatable {
 
     @Override
     public VMObject clone() {
-        return new UnaryOperatorObject(operator);
+        return this; //Immutable object
     }
 
     @Override

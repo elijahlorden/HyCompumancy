@@ -9,7 +9,7 @@ import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.operators.BinaryOperator;
 import me.freznel.compumancy.vm.operators.BinaryOperatorSet;
 
-public class BinaryOperatorObject extends VMObject implements IEvaluatable {
+public final class BinaryOperatorObject extends VMObject implements IEvaluatable {
     public static final BuilderCodec<BinaryOperatorObject> CODEC = BuilderCodec.builder(BinaryOperatorObject.class, BinaryOperatorObject::new)
             .append(new KeyedCodec<>("Ref", new EnumCodec<>(BinaryOperator.class)), BinaryOperatorObject::SetOperator, BinaryOperatorObject::GetOperator)
             .add()
@@ -21,7 +21,7 @@ public class BinaryOperatorObject extends VMObject implements IEvaluatable {
     public BinaryOperatorObject(BinaryOperator operator) { this.operator = operator; }
 
     public BinaryOperator GetOperator() { return operator; }
-    public void SetOperator(BinaryOperator operator) { this.operator = operator; }
+    private void SetOperator(BinaryOperator operator) { this.operator = operator; }
 
     @Override
     public String GetObjectName() { return "BinaryOperator"; }
@@ -36,7 +36,7 @@ public class BinaryOperatorObject extends VMObject implements IEvaluatable {
 
     @Override
     public VMObject clone() {
-        return new BinaryOperatorObject(operator);
+        return this; //Immutable object
     }
 
     @Override

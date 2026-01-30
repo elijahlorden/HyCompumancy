@@ -12,7 +12,7 @@ import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
 import java.util.logging.Level;
 
-public class ActionObject extends VMObject implements IEvaluatable {
+public final class ActionObject extends VMObject implements IEvaluatable {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
     public static final BuilderCodec<ActionObject> CODEC = BuilderCodec.builder(ActionObject.class, ActionObject::new)
             .append(new KeyedCodec<>("Ref", Codec.STRING), ActionObject::SetActionName, ActionObject::GetActionName)
@@ -37,10 +37,10 @@ public class ActionObject extends VMObject implements IEvaluatable {
     protected ActionObject(VMAction ref, String actionName) { Ref = ref; this.actionName = actionName; }
 
     public VMAction GetActionRef() { return Ref; }
-    public void SetActionRef(VMAction action) { Ref = action; actionName = VMAction.GetName(action); }
+    private void SetActionRef(VMAction action) { Ref = action; actionName = VMAction.GetName(action); }
 
     public String GetActionName() { return actionName; }
-    public void SetActionName(String actionName) { Ref = VMAction.GetAction(actionName); this.actionName = actionName; }
+    private void SetActionName(String actionName) { Ref = VMAction.GetAction(actionName); this.actionName = actionName; }
 
     @Override
     public String GetObjectName() { return "Action"; }
@@ -53,7 +53,7 @@ public class ActionObject extends VMObject implements IEvaluatable {
 
     @Override
     public VMObject clone() {
-        return new ActionObject(Ref, actionName);
+        return this; //Immutable object
     }
 
     @Override
