@@ -2,6 +2,7 @@ package me.freznel.compumancy.vm;
 
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.actions.entity.GetCasterAction;
+import me.freznel.compumancy.vm.actions.entity.GetEntityPositionAction;
 import me.freznel.compumancy.vm.actions.entity.SendMessageAction;
 import me.freznel.compumancy.vm.actions.stack.*;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
@@ -13,8 +14,6 @@ import me.freznel.compumancy.vm.objects.*;
 import me.freznel.compumancy.vm.operators.*;
 import me.freznel.compumancy.vm.operators.binary.*;
 import me.freznel.compumancy.vm.operators.unary.*;
-
-import java.nio.channels.SelectableChannel;
 
 public class RegisterVMObjects {
 
@@ -53,6 +52,7 @@ public class RegisterVMObjects {
         VMObject.CODEC.register("Null", NullObject.class, NullObject.CODEC);
         VMObject.CODEC.register("Number", NumberObject.class, NumberObject.CODEC);
         VMObject.CODEC.register("OP1", UnaryOperatorObject.class, UnaryOperatorObject.CODEC);
+        VMObject.CODEC.register("Vector3", Vector3Object.class, Vector3Object.CODEC);
 
         //Frames
         Frame.CODEC.register("Exe", ExecutionFrame.class, ExecutionFrame.CODEC);
@@ -104,6 +104,7 @@ public class RegisterVMObjects {
         //Entity actions
         RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
         RegisterSimpleAction("send-message", SendMessageAction.class, new SendMessageAction());
+        RegisterSimpleAction("entity:get-position", GetEntityPositionAction.class, new GetEntityPositionAction());
 
     }
 

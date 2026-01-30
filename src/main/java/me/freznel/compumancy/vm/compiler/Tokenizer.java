@@ -2,6 +2,7 @@ package me.freznel.compumancy.vm.compiler;
 
 import com.hypixel.hytale.math.vector.Vector3d;
 import me.freznel.compumancy.vm.exceptions.ParseException;
+import me.freznel.compumancy.vm.objects.Vector3Object;
 
 import java.util.ArrayDeque;
 
@@ -138,7 +139,7 @@ public class Tokenizer {
         return sb.toString();
     }
 
-    private Vector3d readVector() {
+    private Vector3Object readVector() {
         char c;
         double x = 0, y = 0, z = 0;
         int startLine = line;
@@ -162,7 +163,7 @@ public class Tokenizer {
         }
         if (!ended) throw new ParseException(String.format("Line %d: Unterminated vector literal", startLine));
         if (vecIndex != 3) throw new ParseException(String.format("Line %d: Attempted to create a vector with %d components", startLine, vecIndex));
-        return new Vector3d(x, y, z);
+        return new Vector3Object(x, y, z);
     }
 
     private Token readNextToken() {

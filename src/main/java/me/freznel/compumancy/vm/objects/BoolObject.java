@@ -7,14 +7,14 @@ import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
-public class BoolObject extends VMObject implements IEvaluatable {
-    public static final BuilderCodec<BoolObject> CODEC = BuilderCodec.builder(BoolObject.class, BoolObject::new)
-            .append(new KeyedCodec<>("Value", Codec.BOOLEAN), BoolObject::SetValue, BoolObject::GetValue)
-            .add()
-            .build();
-
+public final class BoolObject extends VMObject implements IEvaluatable {
     public static final BoolObject TRUE = new BoolObject(true);
     public static final BoolObject FALSE = new BoolObject(false);
+
+    public static final BuilderCodec<BoolObject> CODEC = BuilderCodec.builder(BoolObject.class, BoolObject::new)
+            .append(new KeyedCodec<>("Value", Codec.BOOLEAN), (o, v) -> o.value = v, BoolObject::GetValue)
+            .add()
+            .build();
 
     private boolean value;
 
@@ -26,11 +26,6 @@ public class BoolObject extends VMObject implements IEvaluatable {
     public boolean GetValue()
     {
         return value;
-    }
-
-    public void SetValue(boolean value)
-    {
-        this.value = value;
     }
 
     @Override
@@ -49,7 +44,7 @@ public class BoolObject extends VMObject implements IEvaluatable {
 
     @Override
     public VMObject clone() {
-        return new BoolObject(value);
+        return this; //Immutable object
     }
 
     @Override
@@ -59,7 +54,7 @@ public class BoolObject extends VMObject implements IEvaluatable {
 
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
-        invocation.Push(new BoolObject(value));
+        invocation.Push(this); //Immutable object
     }
 
     @Override

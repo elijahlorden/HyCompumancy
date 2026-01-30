@@ -1,5 +1,6 @@
 package me.freznel.compumancy.vm.objects;
 
+import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
@@ -16,15 +17,22 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     public static final BuilderCodec<ListObject> CODEC = BuilderCodec.builder(ListObject.class, ListObject::new)
             .append(new KeyedCodec<>("List", new ArrayCodec<VMObject>(VMObject.CODEC, VMObject[]::new)), ListObject::SetContentsArray, ListObject::GetContentsArray)
             .add()
+            .append(new KeyedCodec<>("ExeSync", Codec.BOOLEAN), ListObject::SetExecuteSync, ListObject::GetExecuteSync)
+            .add()
             .build();
 
     private ArrayList<VMObject> contents;
+    private boolean executeSync;
 
     public ListObject() { contents = new ArrayList<>(); }
     public ListObject(ArrayList<VMObject> contents) { this.contents = contents; }
+    public ListObject(ArrayList<VMObject> contents, boolean executeSync) { this.contents = contents; this.executeSync = executeSync; }
 
     public ArrayList<VMObject> GetContents() { return this.contents; }
     public void SetContents(ArrayList<VMObject> contents) { this.contents = contents; }
+
+    public boolean GetExecuteSync() { return this.executeSync; }
+    public void SetExecuteSync(boolean executeSync) { this.executeSync = executeSync; }
 
     public VMObject[] GetContentsArray() { return this.contents.toArray(new VMObject[0]); }
     public void SetContentsArray(VMObject[] contents) {
@@ -67,7 +75,7 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
         for (VMObject obj : contents) {
             newList.add(obj.clone());
         }
-        return new ListObject(newList);
+        return new ListObject(newList, executeSync);
     }
 
     @Override
@@ -89,4 +97,7 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     public void Execute(Invocation invocation) throws VMException {
         invocation.PushFrame(new ExecutionFrame(this.contents)); //Destructive read, cloning not required
     }
+
+    @Override
+    public boolean IsExecuteSynchronous() { return executeSync; }
 }

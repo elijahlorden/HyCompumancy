@@ -22,6 +22,8 @@ import java.util.logging.Logger;
 
 public class Invocation implements Runnable {
     private static final long CHECKPOINT_INTERVAL = 1000 * 10;
+    private static final long SCHEDULE_DELAY_ASYNC = 50;
+    private static final long SCHEDULE_DELAY_SYNC = 100;
 
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
     private static final ConcurrentHashMap<UUID, Invocation> RunningInvocations = new ConcurrentHashMap<>();
@@ -42,10 +44,12 @@ public class Invocation implements Runnable {
     private final UUID id;
     private long nextCheckpoint;
     private final AtomicBoolean isCanceled;
+    private boolean isRunningSync;
 
     public Invocation() {
         id = UUID.randomUUID();
         isCanceled = new AtomicBoolean(false);
+        isRunningSync = false;
     }
 
     public Invocation(World world, Ref<EntityStore> caster, ArrayList<VMObject> contents, int executionBudget) {
@@ -58,6 +62,7 @@ public class Invocation implements Runnable {
         frameStack.addLast(new ExecutionFrame(contents));
         this.id = UUID.randomUUID();
         isCanceled = new AtomicBoolean(false);
+        isRunningSync = false;
     }
 
     public Invocation(World world, Ref<EntityStore> caster, InvocationState state) {
@@ -68,6 +73,7 @@ public class Invocation implements Runnable {
         this.frameStack = state.GetFrameStack();
         this.id = state.GetId();
         isCanceled = new AtomicBoolean(false);
+        isRunningSync = false;
     }
 
     public World GetWorld() { return world; }
@@ -89,6 +95,7 @@ public class Invocation implements Runnable {
         frameStack.addLast(frame);
         if (frameStack.size() > 128) throw new StackOverflowException("Maximum execution depth of 128 exceeded");
     }
+    public boolean IsRunningSync() { return this.isRunningSync; }
 
     public int OperandCount() { return operandStack.size(); }
     public VMObject Pop() { return operandStack.removeLast(); }
@@ -99,24 +106,19 @@ public class Invocation implements Runnable {
     public VMObject Peek() { return operandStack.getLast(); }
     public VMObject Peek(int depth) { return operandStack.get((operandStack.size() - 1) - depth); }
 
-    /*
-        TODO: Rework this to conditionally run inside the caster's world thread.
-        It should detect if a frame has any actions that require world sync and run in the world thread if so.
-        It should continue execution in the world thread until encountering a frame with no world sync actions.
-
-        Add a compile-time flag for world sync actions to ListObject.  This avoids needing to check every object inside a frame before executing it.
-        The runtime list builder should also detect world sync actions and flag its list accordingly.
-     */
-
     public void Step() {
-
         long interruptAt = System.nanoTime() + 1_000_000 * 5; //+5ms maximum
         currentExecutionBudget = executionBudget;
         while (currentExecutionBudget > 0 && !frameStack.isEmpty() && System.nanoTime() < interruptAt) {
             var frame = frameStack.getLast();
+            if (IsWrongSync(frame.GetFrameSyncType())) break;
             frame.Execute(this, interruptAt);
             if (frame.IsFinished() && frameStack.getLast() == frame) frameStack.removeLast();
         }
+    }
+
+    public boolean IsWrongSync(FrameSyncType syncType) {
+        return ((syncType == FrameSyncType.Sync && !isRunningSync) || (syncType == FrameSyncType.Async && isRunningSync));
     }
 
     public void Cancel() { isCanceled.set(true); }
@@ -144,11 +146,37 @@ public class Invocation implements Runnable {
         return true;
     }
 
+    private void ScheduleSync() {
+        Compumancy.Get().Schedule(() -> {
+            world.execute(this);
+        }, SCHEDULE_DELAY_SYNC);
+    }
+
+    private void Schedule() {
+        var nextFrame = frameStack.getLast();
+        var syncType = nextFrame.GetFrameSyncType();
+        if (syncType == FrameSyncType.Neutral) {
+            if (isRunningSync) {
+                ScheduleSync();
+            } else {
+                Compumancy.Get().Schedule(this, SCHEDULE_DELAY_ASYNC);
+            }
+        } else if (syncType == FrameSyncType.Sync) {
+            if (!isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to world thread", id.toString()));
+            isRunningSync = true;
+            ScheduleSync();
+        } else {
+            if (isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to background thread", id.toString()));
+            isRunningSync = false;
+            Compumancy.Get().Schedule(this, SCHEDULE_DELAY_ASYNC);
+        }
+    }
+
     public void Start() {
-        if (RunningInvocations.containsKey(id) || IsCancelled()) return;
+        if (RunningInvocations.containsKey(id) || IsCancelled() || IsFinished()) return;
         nextCheckpoint = System.currentTimeMillis() + CHECKPOINT_INTERVAL;
-        Compumancy.Get().Schedule(this, 0);
         RunningInvocations.put(id, this);
+        Schedule();
     }
 
     private void End() {
@@ -166,7 +194,7 @@ public class Invocation implements Runnable {
             //Logger.at(Level.INFO).log(String.format("Stepping invocation %s", id.toString()));
             Step();
             if (Checkpoint(false, true) && !IsFinished() && !IsCancelled()) {
-                Compumancy.Get().Schedule(this, 50);
+                Schedule();
             } else {
                 End();
             }

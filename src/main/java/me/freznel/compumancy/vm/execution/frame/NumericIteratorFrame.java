@@ -3,6 +3,7 @@ package me.freznel.compumancy.vm.execution.frame;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import me.freznel.compumancy.vm.execution.FrameSyncType;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.interfaces.IExecutable;
@@ -77,6 +78,15 @@ public class NumericIteratorFrame extends IteratorFrame {
             else if (evaluatable instanceof IEvaluatable eval) eval.Evaluate(invocation);
         }
         current += inc;
+    }
+
+    @Override
+    public FrameSyncType GetFrameSyncType() {
+        if (IsFinished()) return FrameSyncType.Neutral;
+        if (evaluatable instanceof IExecutable exe && exe.IsExecuteSynchronous()) return FrameSyncType.Sync;
+        if (evaluatable instanceof IEvaluatable eval && eval.IsEvalSynchronous()) return FrameSyncType.Sync;
+        int remaining = (Math.abs(end - start) + 1) * evaluatable.GetObjectSize();
+        return (remaining > 10) ? FrameSyncType.Async : FrameSyncType.Neutral; //Only force a thread change for large frames
     }
 
     @Override

@@ -1,8 +1,8 @@
 package me.freznel.compumancy.vm.execution;
 
-//Denotes which thread an invocation frame should execute on.  Neutral frames
+//Denotes which thread an invocation frame should execute on
 public enum FrameSyncType {
     Neutral,
-    BackgroundThread,
-    CasterThread;
+    Sync,
+    Async;
 }

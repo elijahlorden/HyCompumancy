@@ -7,27 +7,24 @@ import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
-public class NumberObject extends VMObject implements IEvaluatable {
+public final class NumberObject extends VMObject implements IEvaluatable {
+    public static final NumberObject ZERO = new NumberObject(0);
+
     public static final BuilderCodec<NumberObject> CODEC = BuilderCodec.builder(NumberObject.class, NumberObject::new)
-            .append(new KeyedCodec<>("Value", Codec.DOUBLE), NumberObject::SetValue, NumberObject::GetValue)
+            .append(new KeyedCodec<>("Value", Codec.DOUBLE), (o, v) -> o.value = v == null ? 0 : v, NumberObject::GetValue)
             .add()
             .build();
 
     private double value;
 
-    public NumberObject() { super(); }
+    public NumberObject() { this.value = 0; }
     public NumberObject(double value) {
         this.value = value;
     }
 
     public double GetValue()
     {
-        return value;
-    }
-
-    public void SetValue(double value)
-    {
-        this.value = value;
+        return this.value;
     }
 
     @Override
@@ -46,7 +43,7 @@ public class NumberObject extends VMObject implements IEvaluatable {
 
     @Override
     public VMObject clone() {
-        return new NumberObject(value);
+        return this; //Immutable object
     }
 
     @Override
@@ -56,7 +53,7 @@ public class NumberObject extends VMObject implements IEvaluatable {
 
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
-        invocation.Push(new NumberObject(value));
+        invocation.Push(this);
     }
 
     @Override

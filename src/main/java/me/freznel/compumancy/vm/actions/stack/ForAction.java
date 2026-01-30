@@ -25,7 +25,7 @@ public class ForAction extends VMAction {
 
     @Override
     public void Execute(Invocation invocation) {
-        if (invocation.OperandCount() < 3) throw new StackUnderflowException("for: expected at least 4 operands");
+        if (invocation.OperandCount() < 3) throw new StackUnderflowException("for: expected at least 3 operands");
         var c = invocation.Pop();
         var b = invocation.Pop();
         var a = invocation.Pop();

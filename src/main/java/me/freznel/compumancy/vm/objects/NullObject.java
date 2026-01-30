@@ -4,7 +4,7 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 
-public class NullObject extends VMObject {
+public final class NullObject extends VMObject {
     public static final NullObject NULL = new NullObject();
 
     public static final BuilderCodec<NumberObject> CODEC = BuilderCodec.builder(NumberObject.class, NumberObject::new)
@@ -21,7 +21,7 @@ public class NullObject extends VMObject {
 
     @Override
     public VMObject clone() {
-        return new NullObject();
+        return NULL;
     }
 
 }
