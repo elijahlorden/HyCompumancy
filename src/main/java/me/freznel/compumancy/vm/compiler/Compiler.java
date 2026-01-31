@@ -1,6 +1,5 @@
 package me.freznel.compumancy.vm.compiler;
 
-import com.hypixel.hytale.math.vector.Vector3d;
 import me.freznel.compumancy.vm.exceptions.CompileException;
 import me.freznel.compumancy.vm.objects.ListObject;
 import me.freznel.compumancy.vm.objects.NumberObject;
@@ -38,7 +37,7 @@ public class Compiler {
                 case Vector3 -> stack.peek().addLast((Vector3Object)tkn.value());
 
                 case Word -> { //TODO: Implement late binding WordRefObject for words not found in the Vocabulary
-                    var word = Vocabulary.Get((String)tkn.value());
+                    var word = BaseVocabulary.Get((String)tkn.value());
                     if (word == null) throw new CompileException(String.format("Line %d: Unresolved word '%s'", tkn.line(), tkn.value()));
                     var list = stack.peek();
                     word.AddContentsToList(list);

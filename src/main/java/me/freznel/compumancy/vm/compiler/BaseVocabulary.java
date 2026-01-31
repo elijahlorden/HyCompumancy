@@ -2,12 +2,11 @@ package me.freznel.compumancy.vm.compiler;
 
 import com.hypixel.hytale.logger.HytaleLogger;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-public class Vocabulary {
+public class BaseVocabulary {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
     private static final Map<String, Word> map = new ConcurrentHashMap<>();
 

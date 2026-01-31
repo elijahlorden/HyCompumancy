@@ -7,10 +7,10 @@ import org.bouncycastle.jcajce.provider.asymmetric.CONTEXT;
 import java.util.Arrays;
 import java.util.List;
 
-public class Word {
+public final class Word {
 
     private final VMObject[] contents;
-    private boolean executeSync;
+    private final boolean executeSync;
 
     public Word(VMObject o) {
         this.contents = new VMObject[1];
@@ -25,7 +25,7 @@ public class Word {
             sync = (obj instanceof IEvaluatable eval && eval.IsEvalSynchronous());
             if (sync) break;
         }
-
+        executeSync = sync;
     }
 
     public boolean GetExecuteSync() { return this.executeSync; }

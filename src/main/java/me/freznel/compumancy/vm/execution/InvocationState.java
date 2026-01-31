@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class InvocationState {
+public final class InvocationState implements Cloneable {
     public static final BuilderCodec<InvocationState> CODEC = BuilderCodec.builder(InvocationState.class, InvocationState::new)
             .append(new KeyedCodec<>("Id", Codec.UUID_BINARY), (o, v) -> o.id = v, o -> o.id)
             .add()
@@ -63,4 +63,9 @@ public class InvocationState {
         owner = invocation.GetOwner();
     }
 
+    @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public InvocationState clone() {
+        return this; //Immutable object
+    }
 }

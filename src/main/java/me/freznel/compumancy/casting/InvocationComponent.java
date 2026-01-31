@@ -37,9 +37,16 @@ public class InvocationComponent implements Component<EntityStore> {
     public InvocationComponent() {
         invocations = new HashMap<>();
     }
-
     public InvocationComponent(int max) {
         this.max = max;
+    }
+    public InvocationComponent(InvocationComponent other) {
+        this.max = other.max;
+        this.invocations = new HashMap<>(other.invocations.size());
+        for (var kv : other.invocations.entrySet())
+        {
+            this.invocations.put(kv.getKey(), kv.getValue().clone());
+        }
     }
 
     public boolean IsFull() { return invocations.size() >= max; }
@@ -80,7 +87,7 @@ public class InvocationComponent implements Component<EntityStore> {
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Component<EntityStore> clone() {
-        return new InvocationComponent();
+        return new InvocationComponent(this);
     }
 
 }

@@ -1,10 +1,9 @@
 package me.freznel.compumancy.vm;
 
 import me.freznel.compumancy.vm.actions.ActionHelpers;
-import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.actions.entity.*;
 import me.freznel.compumancy.vm.actions.stack.*;
-import me.freznel.compumancy.vm.compiler.Vocabulary;
+import me.freznel.compumancy.vm.compiler.BaseVocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
 import me.freznel.compumancy.vm.execution.frame.CompileFrame;
 import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
@@ -20,22 +19,22 @@ public class RegisterVMObjects {
     public static void Register() {
 
         //Unary Operators
-        Vocabulary.Register("len", new Word(new UnaryOperatorObject(UnaryOperator.Length)));
-        Vocabulary.RegisterAlias("len", "abs");
-        Vocabulary.Register("negate", new Word(new UnaryOperatorObject(UnaryOperator.SignedNegate)));
-        Vocabulary.Register("not", new Word(new UnaryOperatorObject(UnaryOperator.UnsignedNegate)));
+        BaseVocabulary.Register("len", new Word(new UnaryOperatorObject(UnaryOperator.Length)));
+        BaseVocabulary.RegisterAlias("len", "abs");
+        BaseVocabulary.Register("negate", new Word(new UnaryOperatorObject(UnaryOperator.SignedNegate)));
+        BaseVocabulary.Register("not", new Word(new UnaryOperatorObject(UnaryOperator.UnsignedNegate)));
 
         //Binary Operators
-        Vocabulary.Register("+", new Word(new BinaryOperatorObject(BinaryOperator.Add)));
-        Vocabulary.Register("-", new Word(new BinaryOperatorObject(BinaryOperator.Subtract)));
-        Vocabulary.Register("*", new Word(new BinaryOperatorObject(BinaryOperator.Multiply)));
-        Vocabulary.Register("/", new Word(new BinaryOperatorObject(BinaryOperator.Divide)));
-        Vocabulary.Register("mod", new Word(new BinaryOperatorObject(BinaryOperator.Mod)));
+        BaseVocabulary.Register("+", new Word(new BinaryOperatorObject(BinaryOperator.Add)));
+        BaseVocabulary.Register("-", new Word(new BinaryOperatorObject(BinaryOperator.Subtract)));
+        BaseVocabulary.Register("*", new Word(new BinaryOperatorObject(BinaryOperator.Multiply)));
+        BaseVocabulary.Register("/", new Word(new BinaryOperatorObject(BinaryOperator.Divide)));
+        BaseVocabulary.Register("mod", new Word(new BinaryOperatorObject(BinaryOperator.Mod)));
 
-        Vocabulary.Register("and", new Word(new BinaryOperatorObject(BinaryOperator.And)));
-        Vocabulary.Register("nand", new Word(new BinaryOperatorObject(BinaryOperator.Nand)));
-        Vocabulary.Register("or", new Word(new BinaryOperatorObject(BinaryOperator.Or)));
-        Vocabulary.Register("xor", new Word(new BinaryOperatorObject(BinaryOperator.Xor)));
+        BaseVocabulary.Register("and", new Word(new BinaryOperatorObject(BinaryOperator.And)));
+        BaseVocabulary.Register("nand", new Word(new BinaryOperatorObject(BinaryOperator.Nand)));
+        BaseVocabulary.Register("or", new Word(new BinaryOperatorObject(BinaryOperator.Or)));
+        BaseVocabulary.Register("xor", new Word(new BinaryOperatorObject(BinaryOperator.Xor)));
 
         RegisterCodecs();
         RegisterOperatorSets();
@@ -88,8 +87,8 @@ public class RegisterVMObjects {
         ActionHelpers.RegisterSimpleAction("over", OverAction.class, new OverAction());
 
         //Logic actions
-        Vocabulary.Register("true", new Word(BoolObject.TRUE));
-        Vocabulary.Register("false", new Word(BoolObject.FALSE));
+        BaseVocabulary.Register("true", new Word(BoolObject.TRUE));
+        BaseVocabulary.Register("false", new Word(BoolObject.FALSE));
 
         ActionHelpers.RegisterSimpleAction("?", SelectAction.class, new SelectAction());
 
