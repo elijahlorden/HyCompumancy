@@ -16,6 +16,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 public class InvocationComponent implements Component<EntityStore> {
     public static final BuilderCodec<InvocationComponent> CODEC = BuilderCodec.builder(InvocationComponent.class, InvocationComponent::new)
@@ -69,6 +71,10 @@ public class InvocationComponent implements Component<EntityStore> {
 
     public void RemoveAll() {
         invocations.clear();
+    }
+
+    public Iterator<Map.Entry<String, InvocationState>> GetIterator() {
+        return invocations.entrySet().iterator();
     }
 
     @Override

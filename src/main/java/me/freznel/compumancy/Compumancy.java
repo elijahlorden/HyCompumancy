@@ -6,13 +6,11 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.server.core.util.concurrent.ThreadUtil;
 import me.freznel.compumancy.casting.InvocationComponent;
+import me.freznel.compumancy.commands.CompumancyCommandCollection;
+import me.freznel.compumancy.commands.TestCommand;
 import me.freznel.compumancy.vm.RegisterVMObjects;
-import me.freznel.compumancy.vm.actions.VMAction;
-import me.freznel.compumancy.vm.actions.stack.DuplicateAction;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -49,8 +47,10 @@ public class Compumancy extends JavaPlugin {
 
         invocationComponentType = entityStoreComponentRegistry.registerComponent(InvocationComponent.class, "InvocationComponent", InvocationComponent.CODEC);
 
-        this.getCommandRegistry().registerCommand(new TestCommand(this.getName()));
+        this.getCommandRegistry().registerCommand(new CompumancyCommandCollection());
     }
+
+
 
     @Override
     protected void shutdown() {

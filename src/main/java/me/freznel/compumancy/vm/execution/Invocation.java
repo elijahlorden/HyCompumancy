@@ -2,11 +2,17 @@ package me.freznel.compumancy.vm.execution;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import me.freznel.compumancy.Compumancy;
 import me.freznel.compumancy.casting.InvocationComponent;
+import me.freznel.compumancy.vm.compiler.Compiler;
+import me.freznel.compumancy.vm.exceptions.CompileException;
 import me.freznel.compumancy.vm.exceptions.StackOverflowException;
+import me.freznel.compumancy.vm.execution.frame.CompileFrame;
 import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.frame.Frame;
 import me.freznel.compumancy.vm.objects.VMObject;
@@ -35,6 +41,7 @@ public class Invocation implements Runnable {
 
     private World world;
     private Ref<EntityStore> caster;
+    private UUID owner;
 
     private ArrayList<VMObject> operandStack;
     private ArrayList<Frame> frameStack;
@@ -47,22 +54,37 @@ public class Invocation implements Runnable {
     private boolean isRunningSync;
 
     public Invocation() {
-        id = UUID.randomUUID();
-        isCanceled = new AtomicBoolean(false);
-        isRunningSync = false;
+        this.id = UUID.randomUUID();
+        this.isCanceled = new AtomicBoolean(false);
+        this.isRunningSync = false;
     }
 
-    public Invocation(World world, Ref<EntityStore> caster, ArrayList<VMObject> contents, int executionBudget) {
-        operandStack = new ArrayList<>();
-        frameStack = new ArrayList<>();
+    public Invocation(World world, Ref<EntityStore> caster, UUID owner, ArrayList<VMObject> contents, int executionBudget) {
+        this.operandStack = new ArrayList<>();
+        this.frameStack = new ArrayList<>();
         this.executionBudget = executionBudget;
         this.currentExecutionBudget = executionBudget;
         this.caster = caster;
+        this.owner = owner;
         this.world = world;
-        frameStack.addLast(new ExecutionFrame(contents));
+        this.frameStack.addLast(new ExecutionFrame(contents));
         this.id = UUID.randomUUID();
-        isCanceled = new AtomicBoolean(false);
-        isRunningSync = false;
+        this.isCanceled = new AtomicBoolean(false);
+        this.isRunningSync = false;
+    }
+
+    public Invocation(World world, Ref<EntityStore> caster, UUID owner, String compileString, int executionBudget) {
+        this.operandStack = new ArrayList<>();
+        this.frameStack = new ArrayList<>();
+        this.executionBudget = executionBudget;
+        this.currentExecutionBudget = executionBudget;
+        this.caster = caster;
+        this.owner = owner;
+        this.world = world;
+        this.id = UUID.randomUUID();
+        this.isCanceled = new AtomicBoolean(false);
+        this.isRunningSync = false;
+        PushFrame(new CompileFrame(compileString));
     }
 
     public Invocation(World world, Ref<EntityStore> caster, InvocationState state) {
@@ -72,12 +94,14 @@ public class Invocation implements Runnable {
         this.operandStack = state.GetOperandStack();
         this.frameStack = state.GetFrameStack();
         this.id = state.GetId();
-        isCanceled = new AtomicBoolean(false);
-        isRunningSync = false;
+        this.isCanceled = new AtomicBoolean(false);
+        this.isRunningSync = false;
+        this.owner = state.GetOwner();
     }
 
     public World GetWorld() { return world; }
     public Ref<EntityStore> GetCaster() { return caster; }
+    public UUID GetOwner() { return owner; }
 
     public void SetOperandStack(ArrayList<VMObject> operandStack) { this.operandStack = operandStack; }
     public ArrayList<VMObject> GetOperandStack() { return this.operandStack; }
@@ -111,9 +135,9 @@ public class Invocation implements Runnable {
         currentExecutionBudget = executionBudget;
         while (currentExecutionBudget > 0 && !frameStack.isEmpty() && System.nanoTime() < interruptAt) {
             var frame = frameStack.getLast();
+            if (frame.IsFinished()) { frameStack.removeLast(); continue; }
             if (IsWrongSync(frame.GetFrameSyncType())) break;
             frame.Execute(this, interruptAt);
-            if (frame.IsFinished() && frameStack.getLast() == frame) frameStack.removeLast();
         }
     }
 
@@ -198,8 +222,10 @@ public class Invocation implements Runnable {
             } else {
                 End();
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             Logger.at(Level.INFO).log(String.format("Invocation %s terminated by %s: %s", id.toString(), e.getClass().getSimpleName(), e.getMessage()));
+            var player = Universe.get().getPlayer(owner);
+            if (player != null) player.sendMessage(Message.raw(String.format("An invocation failed with %s: %s", e.getClass().getSimpleName(), e.getMessage())));
             End();
             throw e;
         }

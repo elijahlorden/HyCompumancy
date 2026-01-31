@@ -1,10 +1,12 @@
 package me.freznel.compumancy.vm;
 
+import me.freznel.compumancy.vm.actions.ActionHelpers;
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.actions.entity.*;
 import me.freznel.compumancy.vm.actions.stack.*;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
+import me.freznel.compumancy.vm.execution.frame.CompileFrame;
 import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.frame.Frame;
 import me.freznel.compumancy.vm.execution.frame.NumericIteratorFrame;
@@ -55,6 +57,7 @@ public class RegisterVMObjects {
         //Frames
         Frame.CODEC.register("Exe", ExecutionFrame.class, ExecutionFrame.CODEC);
         Frame.CODEC.register("Numeric", NumericIteratorFrame.class, NumericIteratorFrame.CODEC);
+        Frame.CODEC.register("Compile", CompileFrame.class, CompileFrame.CODEC);
 
     }
 
@@ -77,36 +80,31 @@ public class RegisterVMObjects {
 
     }
 
-    private static void RegisterSimpleAction(String word, Class<? extends VMAction> cls, VMAction action) {
-        VMAction.Register(word, action);
-        Vocabulary.Register(word, new Word(new ActionObject(cls)));
-    }
-
     private static void RegisterActions() {
         //Stack actions
-        RegisterSimpleAction("dup", DuplicateAction.class, new DuplicateAction());
-        RegisterSimpleAction("drop", DropAction.class, new DropAction());
-        RegisterSimpleAction("swap", SwapAction.class, new SwapAction());
-        RegisterSimpleAction("over", OverAction.class, new OverAction());
+        ActionHelpers.RegisterSimpleAction("dup", DuplicateAction.class, new DuplicateAction());
+        ActionHelpers.RegisterSimpleAction("drop", DropAction.class, new DropAction());
+        ActionHelpers.RegisterSimpleAction("swap", SwapAction.class, new SwapAction());
+        ActionHelpers.RegisterSimpleAction("over", OverAction.class, new OverAction());
 
         //Logic actions
         Vocabulary.Register("true", new Word(BoolObject.TRUE));
         Vocabulary.Register("false", new Word(BoolObject.FALSE));
 
-        RegisterSimpleAction("?", SelectAction.class, new SelectAction());
+        ActionHelpers.RegisterSimpleAction("?", SelectAction.class, new SelectAction());
 
         //Flow control actions
-        RegisterSimpleAction("eval", EvalAction.class, new EvalAction());
-        RegisterSimpleAction("for", ForAction.class, new ForAction());
+        ActionHelpers.RegisterSimpleAction("eval", EvalAction.class, new EvalAction());
+        ActionHelpers.RegisterSimpleAction("for", ForAction.class, new ForAction());
 
         //Entity actions
-        RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
-        RegisterSimpleAction("send-message", SendMessageAction.class, new SendMessageAction());
-        RegisterSimpleAction("entity:get-position", GetEntityPositionAction.class, new GetEntityPositionAction());
-        RegisterSimpleAction("entity:get-rotation", GetEntityRotationAction.class, new GetEntityRotationAction());
-        RegisterSimpleAction("entity:get-velocity", GetEntityVelocityAction.class, new GetEntityVelocityAction());
-        RegisterSimpleAction("entity:get-head-position", GetEntityHeadPositionAction.class, new GetEntityHeadPositionAction());
-        RegisterSimpleAction("entity:get-look", GetEntityHeadRotationAction.class, new GetEntityHeadRotationAction());
+        ActionHelpers.RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
+        ActionHelpers.RegisterSimpleAction("send-message", SendMessageAction.class, new SendMessageAction());
+        ActionHelpers.RegisterSimpleAction("entity:get-position", GetEntityPositionAction.class, new GetEntityPositionAction());
+        ActionHelpers.RegisterSimpleAction("entity:get-rotation", GetEntityRotationAction.class, new GetEntityRotationAction());
+        ActionHelpers.RegisterSimpleAction("entity:get-velocity", GetEntityVelocityAction.class, new GetEntityVelocityAction());
+        ActionHelpers.RegisterSimpleAction("entity:get-head-position", GetEntityHeadPositionAction.class, new GetEntityHeadPositionAction());
+        ActionHelpers.RegisterSimpleAction("entity:get-look", GetEntityHeadRotationAction.class, new GetEntityHeadRotationAction());
 
     }
 

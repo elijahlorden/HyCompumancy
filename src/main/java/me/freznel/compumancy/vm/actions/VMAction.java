@@ -5,13 +5,14 @@ import me.freznel.compumancy.vm.execution.Invocation;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public abstract class VMAction {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
 
-    public static final Map<String, VMAction> Actions = new HashMap<>();
-    public static final Map<Class<? extends VMAction>, String> Names = new HashMap<>();
+    public static final Map<String, VMAction> Actions = new ConcurrentHashMap<>();
+    public static final Map<Class<? extends VMAction>, String> Names = new ConcurrentHashMap<>();
 
     public static void Register(String name, VMAction action) {
         if (Actions.containsKey(name)) {

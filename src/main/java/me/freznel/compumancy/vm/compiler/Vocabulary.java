@@ -4,11 +4,12 @@ import com.hypixel.hytale.logger.HytaleLogger;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class Vocabulary {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
-    private static final Map<String, Word> map = new HashMap<>();
+    private static final Map<String, Word> map = new ConcurrentHashMap<>();
 
     public static void Register(String key, Word word) {
         if (map.containsKey(key)) {
