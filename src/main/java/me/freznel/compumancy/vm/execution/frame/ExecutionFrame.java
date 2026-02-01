@@ -48,9 +48,14 @@ public class ExecutionFrame extends Frame {
         return this.contents.subList(index, this.contents.size()).toArray(new VMObject[0]); //Return only the objects that haven't been executed yet
     }
 
-    private void SetContentsArray(VMObject[] contents) {
+    public void SetContentsArray(VMObject[] contents) {
         this.contents = new ArrayList<>();
         this.contents.addAll(Arrays.asList(contents));
+        index = 0;
+    }
+
+    public void SetContents(ArrayList<VMObject> contents) {
+        this.contents = contents;
         index = 0;
     }
 
@@ -101,5 +106,13 @@ public class ExecutionFrame extends Frame {
     @Override
     public Frame clone() {
         return new ExecutionFrame(this);
+    }
+
+    //Create a full copy of the frame regardless of current index
+    public ExecutionFrame CopyFull() {
+        var newFrame = new ExecutionFrame();
+        newFrame.SetContents(this.contents);
+        newFrame.SetExecuteSync(this.executeSync);
+        return newFrame;
     }
 }

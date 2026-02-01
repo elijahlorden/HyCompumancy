@@ -1,4 +1,4 @@
-package me.freznel.compumancy.vm.actions.stack;
+package me.freznel.compumancy.vm.actions.flow;
 
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.exceptions.InvalidOperationException;

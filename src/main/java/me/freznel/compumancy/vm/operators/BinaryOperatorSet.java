@@ -11,7 +11,6 @@ import java.util.logging.Level;
 public class BinaryOperatorSet<T extends VMObject, K extends VMObject> {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
 
-
     private static final Map<OperatorSetKey, BinaryOperatorSet<? extends VMObject, ? extends VMObject>> Sets = new HashMap<>();
 
     public record OperatorSetKey(Class<? extends VMObject> left, Class<? extends VMObject> right) { }
@@ -29,12 +28,9 @@ public class BinaryOperatorSet<T extends VMObject, K extends VMObject> {
 
     public static <T extends VMObject, K extends VMObject> VMObject Operate(BinaryOperator operator, T left, K right) throws InvalidOperationException
     {
-        var key = new OperatorSetKey(left.getClass(), right.getClass());
-
-        if (!Sets.containsKey(key)) throw new InvalidOperationException(String.format("Attempted to %s %s and %s", operator.toString(), left.getClass().getName(), right.getClass().getName()));
-
         @SuppressWarnings("unchecked")
-        BinaryOperatorSet<T, K> set = (BinaryOperatorSet<T, K>) Sets.get(key);
+        BinaryOperatorSet<T, K> set = (BinaryOperatorSet<T, K>) Sets.get(new OperatorSetKey(left.getClass(), right.getClass()));
+        if (set == null) throw new InvalidOperationException(String.format("Attempted to %s %s and %s", operator.toString(), left.getClass().getName(), right.getClass().getName()));
 
         return switch (operator)
         {
@@ -48,6 +44,12 @@ public class BinaryOperatorSet<T extends VMObject, K extends VMObject> {
             case Nand -> set.Nand(left, right);
             case Or -> set.Or(left, right);
             case Xor -> set.Xor(left, right);
+            case Equal -> set.Equal(left, right);
+            case NotEqual  -> set.NotEqual(left, right);
+            case GreaterThan  -> set.GreaterThan(left, right);
+            case LessThan  -> set.LessThan(left, right);
+            case GreaterThanOrEqualTo  -> set.GreaterThanOrEqualTo(left, right);
+            case LessThanOrEqualTo  -> set.LessThanOrEqualTo(left, right);
         };
     }
 
@@ -57,13 +59,17 @@ public class BinaryOperatorSet<T extends VMObject, K extends VMObject> {
     public VMObject Multiply(T a, K b) { BinaryOperator.Multiply.ThrowInvalidOperation(a, b); return null; }
     public VMObject Divide(T a, K b) { BinaryOperator.Divide.ThrowInvalidOperation(a, b); return null; }
     public VMObject Mod(T a, K b) { BinaryOperator.Mod.ThrowInvalidOperation(a, b); return null; }
+
     public VMObject And(T a, K b) { BinaryOperator.And.ThrowInvalidOperation(a, b); return null; }
     public VMObject Nand(T a, K b) { BinaryOperator.Nand.ThrowInvalidOperation(a, b); return null; }
     public VMObject Or(T a, K b) { BinaryOperator.Or.ThrowInvalidOperation(a, b); return null; }
     public VMObject Xor(T a, K b) { BinaryOperator.Xor.ThrowInvalidOperation(a, b); return null; }
 
-
-
-
+    public VMObject Equal(T a, K b) { BinaryOperator.Equal.ThrowInvalidOperation(a, b); return null; }
+    public VMObject NotEqual(T a, K b) { BinaryOperator.NotEqual.ThrowInvalidOperation(a, b); return null; }
+    public VMObject GreaterThan(T a, K b) { BinaryOperator.GreaterThan.ThrowInvalidOperation(a, b); return null; }
+    public VMObject LessThan(T a, K b) { BinaryOperator.LessThan.ThrowInvalidOperation(a, b); return null; }
+    public VMObject GreaterThanOrEqualTo(T a, K b) { BinaryOperator.GreaterThanOrEqualTo.ThrowInvalidOperation(a, b); return null; }
+    public VMObject LessThanOrEqualTo(T a, K b) { BinaryOperator.LessThanOrEqualTo.ThrowInvalidOperation(a, b); return null; }
 
 }

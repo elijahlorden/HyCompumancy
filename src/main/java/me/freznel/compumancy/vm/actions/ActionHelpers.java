@@ -2,7 +2,7 @@ package me.freznel.compumancy.vm.actions;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import me.freznel.compumancy.vm.compiler.BaseVocabulary;
+import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
 import me.freznel.compumancy.vm.exceptions.InvalidOperationException;
 import me.freznel.compumancy.vm.exceptions.OutOfAmbitException;
@@ -14,7 +14,7 @@ public final class ActionHelpers {
 
     public static void RegisterSimpleAction(String word, Class<? extends VMAction> cls, VMAction action) {
         VMAction.Register(word, action);
-        BaseVocabulary.Register(word, new Word(new ActionObject(cls)));
+        Vocabulary.BASE.Add(word, new Word(new ActionObject(cls)));
     }
 
     public static Ref<EntityStore> GetSyncEntityArgument(Invocation invocation, String operationName) {

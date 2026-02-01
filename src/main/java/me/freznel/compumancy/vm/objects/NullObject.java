@@ -7,7 +7,7 @@ import com.hypixel.hytale.codec.builder.BuilderCodec;
 public final class NullObject extends VMObject {
     public static final NullObject NULL = new NullObject();
 
-    public static final BuilderCodec<NumberObject> CODEC = BuilderCodec.builder(NumberObject.class, NumberObject::new)
+    public static final BuilderCodec<NullObject> CODEC = BuilderCodec.builder(NullObject.class, () -> NULL)
             .build();
 
     @Override

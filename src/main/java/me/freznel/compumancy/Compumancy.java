@@ -6,6 +6,7 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import me.freznel.compumancy.casting.DefinitionStoreComponent;
 import me.freznel.compumancy.casting.InvocationComponent;
 import me.freznel.compumancy.commands.CompumancyCommandCollection;
 import me.freznel.compumancy.commands.TestCommand;
@@ -30,6 +31,10 @@ public class Compumancy extends JavaPlugin {
     private ComponentType<EntityStore, InvocationComponent> invocationComponentType;
     public ComponentType<EntityStore, InvocationComponent> GetInvocationComponentType() { return invocationComponentType; }
 
+    private ComponentType<EntityStore, DefinitionStoreComponent> definitionStoreComponentType;
+    public ComponentType<EntityStore, DefinitionStoreComponent> GetDefinitionStoreComponentType() { return definitionStoreComponentType; }
+
+
     public Compumancy(JavaPluginInit init) {
         super(init);
         instance = this;
@@ -46,6 +51,7 @@ public class Compumancy extends JavaPlugin {
         ComponentRegistryProxy<EntityStore> entityStoreComponentRegistry = this.getEntityStoreRegistry();
 
         invocationComponentType = entityStoreComponentRegistry.registerComponent(InvocationComponent.class, "InvocationComponent", InvocationComponent.CODEC);
+        definitionStoreComponentType = entityStoreComponentRegistry.registerComponent(DefinitionStoreComponent.class, "DefinitionStoreComponent", DefinitionStoreComponent.CODEC);
 
         this.getCommandRegistry().registerCommand(new CompumancyCommandCollection());
     }

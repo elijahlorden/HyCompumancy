@@ -1,15 +1,27 @@
 package me.freznel.compumancy.vm.compiler;
 
+import com.hypixel.hytale.logger.HytaleLogger;
 import me.freznel.compumancy.vm.exceptions.CompileException;
-import me.freznel.compumancy.vm.objects.ListObject;
-import me.freznel.compumancy.vm.objects.NumberObject;
-import me.freznel.compumancy.vm.objects.VMObject;
-import me.freznel.compumancy.vm.objects.Vector3Object;
+import me.freznel.compumancy.vm.objects.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public class Compiler {
+    private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
+    private static final Map<String, ICompilerWord> compilerWords = new ConcurrentHashMap<>();
+
+    public static void Register(String key, ICompilerWord word) {
+        if (compilerWords.containsKey(key)) {
+            Logger.at(Level.SEVERE).log(String.format("Attempted to register duplicate compiler word '%s'", key));
+            return;
+        }
+        compilerWords.put(key, word);
+    }
 
     public static ArrayList<VMObject> Compile(String compileString) {
         Tokenizer tokenizer = new Tokenizer(compileString);
@@ -36,16 +48,22 @@ public class Compiler {
                 case String -> throw new CompileException("TODO: String objects");
                 case Vector3 -> stack.peek().addLast((Vector3Object)tkn.value());
 
-                case Word -> { //TODO: Implement late binding WordRefObject for words not found in the Vocabulary
-                    var word = BaseVocabulary.Get((String)tkn.value());
-                    if (word == null) throw new CompileException(String.format("Line %d: Unresolved word '%s'", tkn.line(), tkn.value()));
-                    var list = stack.peek();
-                    word.AddContentsToList(list);
-                    list.ExecuteSync |= word.GetExecuteSync(); //Flag the list as executeSync if the word is executeSync
+                case Word -> {
+                    String wordKey = (String)tkn.value();
+                    if (compilerWords.containsKey(wordKey)) {
+                        compilerWords.get(wordKey).Compile(tokenizer, stack);
+                    } else if (Vocabulary.BASE.Contains(wordKey)) {
+                        var word = Vocabulary.BASE.Get(wordKey);
+                        var list = stack.peek();
+                        word.AddContentsToList(list);
+                        list.ExecuteSync |= word.GetExecuteSync(); //Flag the list as executeSync if the word is executeSync
+                    } else { //Late binding definition reference.  Will throw at runtime if definition is not present.
+                        stack.peek().addLast(new DefinitionRefObject(wordKey));
+                    }
                 }
 
                 case Invalid -> throw new CompileException(String.format("Line %d: Invalid token", tkn.line()));
-                default -> throw new CompileException(String.format("Line %d: Unhandled token type '%s'", tkn.line(), tkn.type().toString()));
+                default -> throw new CompileException(String.format("Line %d: Unhandled token type '%s'", tkn.line(), tkn.type()));
             }
 
         }

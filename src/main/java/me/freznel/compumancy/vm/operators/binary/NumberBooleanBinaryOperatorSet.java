@@ -31,4 +31,18 @@ public class NumberBooleanBinaryOperatorSet extends BinaryOperatorSet<NumberObje
     @Override
     public VMObject Xor(NumberObject a, BoolObject b) { return (a.GetValue() > 0 ^ b.GetValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
 
+    @Override
+    public VMObject Equal(NumberObject a, BoolObject b) { return a.GetValue() == ToDouble(b) ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject NotEqual(NumberObject a, BoolObject b) { return a.GetValue() != ToDouble(b) ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject GreaterThan(NumberObject a, BoolObject b) { return a.GetValue() > ToDouble(b) ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject LessThan(NumberObject a, BoolObject b) { return a.GetValue() < ToDouble(b) ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject GreaterThanOrEqualTo(NumberObject a, BoolObject b) { return a.GetValue() >= ToDouble(b) ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject LessThanOrEqualTo(NumberObject a, BoolObject b) { return a.GetValue() <= ToDouble(b) ? BoolObject.TRUE : BoolObject.FALSE; }
+
+
 }

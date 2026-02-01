@@ -24,7 +24,6 @@ public abstract class VMAction {
     }
 
     public static VMAction GetAction(String name) {
-        if (!Actions.containsKey(name)) return null;
         return Actions.get(name);
     }
 
@@ -34,7 +33,6 @@ public abstract class VMAction {
     }
 
     public static String GetName(Class<? extends VMAction> cls) {
-        if (!Names.containsKey(cls)) return null;
         return Names.get(cls);
     }
 

@@ -31,7 +31,7 @@ public class InvocationComponent implements Component<EntityStore> {
             .add()
             .build();
 
-    private Map<String, InvocationState> invocations;
+    private final Map<String, InvocationState> invocations;
     private int max;
 
     public InvocationComponent() {
@@ -39,6 +39,7 @@ public class InvocationComponent implements Component<EntityStore> {
     }
     public InvocationComponent(int max) {
         this.max = max;
+        invocations = new HashMap<>();
     }
     public InvocationComponent(InvocationComponent other) {
         this.max = other.max;
@@ -64,16 +65,13 @@ public class InvocationComponent implements Component<EntityStore> {
 
     public boolean Remove(UUID invocationId) {
         String id = invocationId.toString();
-        if (!invocations.containsKey(id)) return false;
-        invocations.remove(id);
-        return true;
+        return invocations.remove(id) != null;
     }
 
     public boolean Replace(InvocationState state) {
         String id = state.GetId().toString();
-        if (!invocations.containsKey(id)) return false;
-        invocations.replace(id, state);
-        return true;
+        var old = invocations.replace(id, state);
+        return old != null;
     }
 
     public void RemoveAll() {

@@ -1,5 +1,10 @@
 package me.freznel.compumancy.vm.compiler;
 
+import com.hypixel.hytale.codec.Codec;
+import com.hypixel.hytale.codec.KeyedCodec;
+import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
+import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.objects.VMObject;
 import org.bouncycastle.jcajce.provider.asymmetric.CONTEXT;
@@ -7,10 +12,16 @@ import org.bouncycastle.jcajce.provider.asymmetric.CONTEXT;
 import java.util.Arrays;
 import java.util.List;
 
-public final class Word {
+public final class Word implements Cloneable {
+    public static final BuilderCodec<Word> CODEC = BuilderCodec.builder(Word.class, Word::new)
+            .append(new KeyedCodec<>("List", new ArrayCodec<VMObject>(VMObject.CODEC, VMObject[]::new)), (o, v) -> o.contents = v, o -> o.contents)
+            .add()
+            .append(new KeyedCodec<>("ExeSync", Codec.BOOLEAN), (o, v) -> o.executeSync = v, o -> o.executeSync)
+            .add()
+            .build();
 
-    private final VMObject[] contents;
-    private final boolean executeSync;
+    private VMObject[] contents;
+    private boolean executeSync;
 
     public Word(VMObject o) {
         this.contents = new VMObject[1];
@@ -36,4 +47,16 @@ public final class Word {
         }
     }
 
+    public ExecutionFrame ToExecutionFrame() {
+        var frame = new ExecutionFrame();
+        frame.SetContentsArray(this.contents);
+        frame.SetExecuteSync(this.executeSync);
+        return frame;
+    }
+
+    @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public Word clone() {
+        return this; //Immutable object
+    }
 }

@@ -1,5 +1,6 @@
 package me.freznel.compumancy.vm.operators.binary;
 
+import me.freznel.compumancy.vm.objects.BoolObject;
 import me.freznel.compumancy.vm.objects.NumberObject;
 import me.freznel.compumancy.vm.objects.VMObject;
 import me.freznel.compumancy.vm.operators.BinaryOperatorSet;
@@ -33,5 +34,18 @@ public class NumberNumberBinaryOperatorSet extends BinaryOperatorSet<NumberObjec
     public VMObject Or(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) | ((long)b.GetValue())) >> 12);  }
     @Override
     public VMObject Xor(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) ^ ((long)b.GetValue())) >> 12);  }
+
+    @Override
+    public VMObject Equal(NumberObject a, NumberObject b) { return a.GetValue() == b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject NotEqual(NumberObject a, NumberObject b) { return a.GetValue() != b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject GreaterThan(NumberObject a, NumberObject b) { return a.GetValue() > b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject LessThan(NumberObject a, NumberObject b) { return a.GetValue() < b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject GreaterThanOrEqualTo(NumberObject a, NumberObject b) { return a.GetValue() >= b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    @Override
+    public VMObject LessThanOrEqualTo(NumberObject a, NumberObject b) { return a.GetValue() <= b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
 
 }

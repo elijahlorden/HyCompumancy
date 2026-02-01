@@ -3,28 +3,25 @@ package me.freznel.compumancy.vm.execution;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import me.freznel.compumancy.Compumancy;
-import me.freznel.compumancy.casting.InvocationComponent;
-import me.freznel.compumancy.vm.compiler.Compiler;
-import me.freznel.compumancy.vm.exceptions.CompileException;
+import me.freznel.compumancy.vm.compiler.Vocabulary;
+import me.freznel.compumancy.vm.compiler.Word;
+import me.freznel.compumancy.vm.exceptions.DefinitionNotFoundException;
+import me.freznel.compumancy.vm.exceptions.InvalidOperationException;
 import me.freznel.compumancy.vm.exceptions.StackOverflowException;
 import me.freznel.compumancy.vm.execution.frame.CompileFrame;
 import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.frame.Frame;
 import me.freznel.compumancy.vm.objects.VMObject;
-import org.jline.utils.Log;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Invocation implements Runnable {
     private static final long CHECKPOINT_INTERVAL = 1000 * 10;
@@ -53,6 +50,12 @@ public class Invocation implements Runnable {
     private final AtomicBoolean isCanceled;
     private boolean isRunningSync;
 
+    private boolean definitionsAttached;
+    private Map<String, ExecutionFrame> cachedDefFrames;
+    private ConcurrentHashMap<String, Word> casterDefs;
+    private int maxUserDefs;
+    private Vocabulary fixedDefs;
+
     public Invocation() {
         this.id = UUID.randomUUID();
         this.isCanceled = new AtomicBoolean(false);
@@ -71,6 +74,7 @@ public class Invocation implements Runnable {
         this.id = UUID.randomUUID();
         this.isCanceled = new AtomicBoolean(false);
         this.isRunningSync = false;
+        TryAttachDefinitionComponent();
     }
 
     public Invocation(World world, Ref<EntityStore> caster, UUID owner, String compileString, int executionBudget) {
@@ -85,6 +89,7 @@ public class Invocation implements Runnable {
         this.isCanceled = new AtomicBoolean(false);
         this.isRunningSync = false;
         PushFrame(new CompileFrame(compileString));
+        TryAttachDefinitionComponent();
     }
 
     public Invocation(World world, Ref<EntityStore> caster, InvocationState state) {
@@ -97,6 +102,7 @@ public class Invocation implements Runnable {
         this.isCanceled = new AtomicBoolean(false);
         this.isRunningSync = false;
         this.owner = state.GetOwner();
+        TryAttachDefinitionComponent();
     }
 
     public World GetWorld() { return world; }
@@ -153,7 +159,6 @@ public class Invocation implements Runnable {
         if (!force && System.currentTimeMillis() < nextCheckpoint) return true;
         if (!caster.isValid()) return false;
         final var state = new InvocationState(this);
-        //Logger.at(Level.INFO).log("Checkpoint");
         world.execute(() -> {
             if (!caster.isValid()) { Cancel(); return; }
             var store = caster.getStore();
@@ -165,7 +170,6 @@ public class Invocation implements Runnable {
                 if (!invocationComponent.Remove(state.GetId())) Cancel();
             }
         });
-
         nextCheckpoint = System.currentTimeMillis() + CHECKPOINT_INTERVAL;
         return true;
     }
@@ -230,4 +234,61 @@ public class Invocation implements Runnable {
             throw e;
         }
     }
+
+    private void TryAttachDefinitionComponent() {
+        if (caster == null || !caster.isValid()) return;
+        var store = caster.getStore();
+        var defComp = store.getComponent(caster, Compumancy.Get().GetDefinitionStoreComponentType());
+        if (defComp != null) {
+            cachedDefFrames = new Object2ObjectOpenHashMap<>();
+            maxUserDefs = defComp.GetMaxUserDefs();
+            casterDefs = defComp.GetUserDefsMap();
+            String fixedVocabularyName = defComp.GetFixedVocabularyName();
+            if (fixedVocabularyName != null) {
+                fixedDefs = Vocabulary.GetVocabulary(fixedVocabularyName);
+                if (fixedDefs == null) Logger.at(Level.WARNING).log(String.format("The fixed vocabulary '%s' was not found", fixedVocabularyName));
+            }
+            definitionsAttached = true;
+        }
+    }
+
+    public void ExecuteDefinition(String defName) {
+        if (!definitionsAttached) throw new DefinitionNotFoundException(String.format("The definition '%s' was not found", defName));
+        ExecutionFrame frame;
+        Word def;
+        if ((frame = cachedDefFrames.get(defName)) != null) {
+            frameStack.addLast(frame.CopyFull());
+        } else if (fixedDefs != null && (def = fixedDefs.Get(defName)) != null) {
+            frame = def.ToExecutionFrame();
+            cachedDefFrames.put(defName, frame);
+            frameStack.addLast(frame);
+        } else if ((def = casterDefs.get(defName)) != null) {
+            frame = def.ToExecutionFrame();
+            cachedDefFrames.put(defName, frame);
+            frameStack.addLast(frame);
+        } else {
+            throw new DefinitionNotFoundException(String.format("The definition '%s' was not found", defName));
+        }
+    }
+
+    public void AddDefinition(String defName, Word word) {
+        if (fixedDefs != null && fixedDefs.Contains(defName)) {
+            throw new InvalidOperationException(String.format("Attempted to override fixed definition '%s'", defName));
+        }
+        casterDefs.put(defName, word);
+        cachedDefFrames.remove(defName);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

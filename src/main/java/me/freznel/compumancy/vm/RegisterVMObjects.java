@@ -2,13 +2,12 @@ package me.freznel.compumancy.vm;
 
 import me.freznel.compumancy.vm.actions.ActionHelpers;
 import me.freznel.compumancy.vm.actions.entity.*;
+import me.freznel.compumancy.vm.actions.flow.ForAction;
 import me.freznel.compumancy.vm.actions.stack.*;
-import me.freznel.compumancy.vm.compiler.BaseVocabulary;
+import me.freznel.compumancy.vm.compiler.Compiler;
+import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
-import me.freznel.compumancy.vm.execution.frame.CompileFrame;
-import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
-import me.freznel.compumancy.vm.execution.frame.Frame;
-import me.freznel.compumancy.vm.execution.frame.NumericIteratorFrame;
+import me.freznel.compumancy.vm.execution.frame.*;
 import me.freznel.compumancy.vm.objects.*;
 import me.freznel.compumancy.vm.operators.*;
 import me.freznel.compumancy.vm.operators.binary.*;
@@ -19,26 +18,34 @@ public class RegisterVMObjects {
     public static void Register() {
 
         //Unary Operators
-        BaseVocabulary.Register("len", new Word(new UnaryOperatorObject(UnaryOperator.Length)));
-        BaseVocabulary.RegisterAlias("len", "abs");
-        BaseVocabulary.Register("negate", new Word(new UnaryOperatorObject(UnaryOperator.SignedNegate)));
-        BaseVocabulary.Register("not", new Word(new UnaryOperatorObject(UnaryOperator.UnsignedNegate)));
+        Vocabulary.BASE.Add("len", new Word(new UnaryOperatorObject(UnaryOperator.Length)));
+        Vocabulary.BASE.AddAlias("len", "abs");
+        Vocabulary.BASE.Add("negate", new Word(new UnaryOperatorObject(UnaryOperator.SignedNegate)));
+        Vocabulary.BASE.Add("not", new Word(new UnaryOperatorObject(UnaryOperator.UnsignedNegate)));
 
         //Binary Operators
-        BaseVocabulary.Register("+", new Word(new BinaryOperatorObject(BinaryOperator.Add)));
-        BaseVocabulary.Register("-", new Word(new BinaryOperatorObject(BinaryOperator.Subtract)));
-        BaseVocabulary.Register("*", new Word(new BinaryOperatorObject(BinaryOperator.Multiply)));
-        BaseVocabulary.Register("/", new Word(new BinaryOperatorObject(BinaryOperator.Divide)));
-        BaseVocabulary.Register("mod", new Word(new BinaryOperatorObject(BinaryOperator.Mod)));
+        Vocabulary.BASE.Add("+", new Word(new BinaryOperatorObject(BinaryOperator.Add)));
+        Vocabulary.BASE.Add("-", new Word(new BinaryOperatorObject(BinaryOperator.Subtract)));
+        Vocabulary.BASE.Add("*", new Word(new BinaryOperatorObject(BinaryOperator.Multiply)));
+        Vocabulary.BASE.Add("/", new Word(new BinaryOperatorObject(BinaryOperator.Divide)));
+        Vocabulary.BASE.Add("mod", new Word(new BinaryOperatorObject(BinaryOperator.Mod)));
 
-        BaseVocabulary.Register("and", new Word(new BinaryOperatorObject(BinaryOperator.And)));
-        BaseVocabulary.Register("nand", new Word(new BinaryOperatorObject(BinaryOperator.Nand)));
-        BaseVocabulary.Register("or", new Word(new BinaryOperatorObject(BinaryOperator.Or)));
-        BaseVocabulary.Register("xor", new Word(new BinaryOperatorObject(BinaryOperator.Xor)));
+        Vocabulary.BASE.Add("and", new Word(new BinaryOperatorObject(BinaryOperator.And)));
+        Vocabulary.BASE.Add("nand", new Word(new BinaryOperatorObject(BinaryOperator.Nand)));
+        Vocabulary.BASE.Add("or", new Word(new BinaryOperatorObject(BinaryOperator.Or)));
+        Vocabulary.BASE.Add("xor", new Word(new BinaryOperatorObject(BinaryOperator.Xor)));
+
+        Vocabulary.BASE.Add("?eq", new Word(new BinaryOperatorObject(BinaryOperator.Equal)));
+        Vocabulary.BASE.Add("?neq", new Word(new BinaryOperatorObject(BinaryOperator.NotEqual)));
+        Vocabulary.BASE.Add("?gt", new Word(new BinaryOperatorObject(BinaryOperator.GreaterThan)));
+        Vocabulary.BASE.Add("?lt", new Word(new BinaryOperatorObject(BinaryOperator.LessThan)));
+        Vocabulary.BASE.Add("?geq", new Word(new BinaryOperatorObject(BinaryOperator.GreaterThanOrEqualTo)));
+        Vocabulary.BASE.Add("?leq", new Word(new BinaryOperatorObject(BinaryOperator.LessThanOrEqualTo)));
 
         RegisterCodecs();
         RegisterOperatorSets();
         RegisterActions();
+        RegisterCompilerWords();
     }
 
     private static void RegisterCodecs() {
@@ -52,11 +59,14 @@ public class RegisterVMObjects {
         VMObject.CODEC.register("Number", NumberObject.class, NumberObject.CODEC);
         VMObject.CODEC.register("OP1", UnaryOperatorObject.class, UnaryOperatorObject.CODEC);
         VMObject.CODEC.register("Vector3", Vector3Object.class, Vector3Object.CODEC);
+        VMObject.CODEC.register("Def", DefinitionRefObject.class, DefinitionRefObject.CODEC);
+        VMObject.CODEC.register("Meta", MetaObject.class, MetaObject.CODEC);
 
         //Frames
         Frame.CODEC.register("Exe", ExecutionFrame.class, ExecutionFrame.CODEC);
         Frame.CODEC.register("Numeric", NumericIteratorFrame.class, NumericIteratorFrame.CODEC);
         Frame.CODEC.register("Compile", CompileFrame.class, CompileFrame.CODEC);
+        Frame.CODEC.register("DefBuilder", DefBuilderFrame.class, DefBuilderFrame.CODEC);
 
     }
 
@@ -87,14 +97,19 @@ public class RegisterVMObjects {
         ActionHelpers.RegisterSimpleAction("over", OverAction.class, new OverAction());
 
         //Logic actions
-        BaseVocabulary.Register("true", new Word(BoolObject.TRUE));
-        BaseVocabulary.Register("false", new Word(BoolObject.FALSE));
+        Vocabulary.BASE.Add("true", new Word(BoolObject.TRUE));
+        Vocabulary.BASE.Add("false", new Word(BoolObject.FALSE));
 
         ActionHelpers.RegisterSimpleAction("?", SelectAction.class, new SelectAction());
 
         //Flow control actions
-        ActionHelpers.RegisterSimpleAction("eval", EvalAction.class, new EvalAction());
         ActionHelpers.RegisterSimpleAction("for", ForAction.class, new ForAction());
+        Vocabulary.BASE.Add(":", new Word(MetaObject.START_DEF));
+        Vocabulary.BASE.Add(";", new Word(MetaObject.END_DEF));
+        Vocabulary.BASE.Add("(", new Word(MetaObject.START_LIST));
+        Vocabulary.BASE.Add(")", new Word(MetaObject.END_LIST));
+        Vocabulary.BASE.Add("eval", new Word(MetaObject.EVAL));
+        Vocabulary.BASE.Add("eval/cc", new Word(MetaObject.EVAL_CC));
 
         //Entity actions
         ActionHelpers.RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
@@ -104,6 +119,20 @@ public class RegisterVMObjects {
         ActionHelpers.RegisterSimpleAction("entity:get-velocity", GetEntityVelocityAction.class, new GetEntityVelocityAction());
         ActionHelpers.RegisterSimpleAction("entity:get-head-position", GetEntityHeadPositionAction.class, new GetEntityHeadPositionAction());
         ActionHelpers.RegisterSimpleAction("entity:get-look", GetEntityHeadRotationAction.class, new GetEntityHeadRotationAction());
+
+    }
+
+    public static void RegisterCompilerWords() {
+        //Definition shorthand word
+        Compiler.Register(":", (tokenizer, stack) -> {
+
+
+
+
+        });
+
+
+
 
     }
 

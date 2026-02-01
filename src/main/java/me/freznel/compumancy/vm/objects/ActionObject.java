@@ -34,7 +34,6 @@ public final class ActionObject extends VMObject implements IEvaluatable {
         }
         Ref = VMAction.GetAction(actionName);
     }
-    protected ActionObject(VMAction ref, String actionName) { Ref = ref; this.actionName = actionName; }
 
     public VMAction GetActionRef() { return Ref; }
     private void SetActionRef(VMAction action) { Ref = action; actionName = VMAction.GetName(action); }
