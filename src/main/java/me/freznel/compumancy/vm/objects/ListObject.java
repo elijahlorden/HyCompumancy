@@ -48,7 +48,7 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     @Override
     public int GetObjectSize() {
         if (contents == null) return 0;
-        int size = 0;
+        int size = 1;
         for (VMObject obj : contents) {
             size += obj.GetObjectSize();
         }

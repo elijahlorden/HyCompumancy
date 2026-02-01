@@ -14,7 +14,7 @@ public final class ActionHelpers {
 
     public static void RegisterSimpleAction(String word, Class<? extends VMAction> cls, VMAction action) {
         VMAction.Register(word, action);
-        Vocabulary.BASE.Add(word, new Word(new ActionObject(cls)));
+        Vocabulary.BASE.Add(word, new Word(VMAction.GetObject(cls)));
     }
 
     public static Ref<EntityStore> GetSyncEntityArgument(Invocation invocation, String operationName) {

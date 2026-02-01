@@ -1,45 +1,38 @@
 package me.freznel.compumancy.vm.objects;
 
-import com.hypixel.hytale.codec.Codec;
-import com.hypixel.hytale.codec.KeyedCodec;
-import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.logger.HytaleLogger;
+import me.freznel.compumancy.codec.CustomMapCodec;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.actions.VMAction;
 import me.freznel.compumancy.vm.exceptions.InvalidActionException;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
-import java.util.logging.Level;
-
 public final class ActionObject extends VMObject implements IEvaluatable {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
-    public static final BuilderCodec<ActionObject> CODEC = BuilderCodec.builder(ActionObject.class, ActionObject::new)
+
+    public static final CustomMapCodec<ActionObject> CODEC = new CustomMapCodec<>(
+            ActionObject.class,
+            "Ref",
+            ActionObject::GetActionName,
+            VMAction::GetObject
+    );
+
+    /*public static final BuilderCodec<ActionObject> CODEC = BuilderCodec.builder(ActionObject.class, ActionObject::new)
             .append(new KeyedCodec<>("Ref", Codec.STRING), ActionObject::SetActionName, ActionObject::GetActionName)
             .add()
-            .build();
+            .build();*/
 
-    private String actionName;
-    private VMAction Ref;
+    private final String actionName;
+    private final VMAction ref;
 
-    public ActionObject() { }
-    public ActionObject(VMAction action) { SetActionRef(action); }
-    public ActionObject(String actionName) { SetActionName(actionName); }
-    public ActionObject(Class<? extends VMAction> cls) {
-        actionName = VMAction.GetName(cls);
-        if (actionName == null) {
-            actionName = cls.getName();
-            Logger.at(Level.SEVERE).log(String.format("Created ActionObject from unregistered VMAction %s", actionName));
-            return;
-        }
-        Ref = VMAction.GetAction(actionName);
+    public ActionObject(VMAction action, String actionName) {
+        this.ref = action;
+        this.actionName = actionName;
     }
 
-    public VMAction GetActionRef() { return Ref; }
-    private void SetActionRef(VMAction action) { Ref = action; actionName = VMAction.GetName(action); }
-
+    public VMAction GetActionRef() { return ref; }
     public String GetActionName() { return actionName; }
-    private void SetActionName(String actionName) { Ref = VMAction.GetAction(actionName); this.actionName = actionName; }
 
     @Override
     public String GetObjectName() { return "Action"; }
@@ -57,17 +50,17 @@ public final class ActionObject extends VMObject implements IEvaluatable {
 
     @Override
     public int ExecutionBudgetCost() {
-        return Ref == null ? 1 : Ref.ExecutionBudgetCost();
+        return ref == null ? 1 : ref.ExecutionBudgetCost();
     }
 
     @Override
     public void Evaluate(Invocation invocation) throws VMException {
-        if (Ref == null) throw new InvalidActionException(String.format("The action '%s' was not found", actionName));
-        Ref.Execute(invocation);
+        if (ref == null) throw new InvalidActionException(String.format("The action '%s' was not found", actionName));
+        ref.Execute(invocation);
     }
 
     @Override
     public boolean IsEvalSynchronous() {
-        return Ref != null && Ref.ExecuteSynchronous();
+        return ref != null && ref.ExecuteSynchronous();
     }
 }

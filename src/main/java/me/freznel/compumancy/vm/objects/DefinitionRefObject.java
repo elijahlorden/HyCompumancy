@@ -28,7 +28,7 @@ public final class DefinitionRefObject extends VMObject implements IEvaluatable,
 
     @Override
     public int GetObjectSize() {
-        return def == null ? 1 : (int)Math.sqrt(def.length());
+        return def == null ? 1 : 1 + (def.length() / 50);
     }
 
     @Override

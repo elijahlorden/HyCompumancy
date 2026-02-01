@@ -4,11 +4,13 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
+import me.freznel.compumancy.vm.compiler.Word;
 import me.freznel.compumancy.vm.exceptions.CompileException;
-import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.execution.FrameSyncType;
 import me.freznel.compumancy.vm.execution.Invocation;
+import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.objects.DefinitionRefObject;
+import me.freznel.compumancy.vm.objects.MetaObject;
 import me.freznel.compumancy.vm.objects.VMObject;
 
 import java.util.ArrayList;
@@ -18,21 +20,29 @@ public class DefBuilderFrame extends Frame {
     public static final BuilderCodec<DefBuilderFrame> CODEC = BuilderCodec.builder(DefBuilderFrame.class, DefBuilderFrame::new)
             .append(new KeyedCodec<>("List", new ArrayCodec<VMObject>(VMObject.CODEC, VMObject[]::new)), (o, v) -> o.contents = new ArrayList<>(List.of(v)), o -> o.contents.toArray(new VMObject[0]))
             .add()
+            .append(new KeyedCodec<>("Sync", Codec.BOOLEAN), (o, v) -> o.evalSync = v, o -> o.evalSync)
+            .add()
             .append(new KeyedCodec<>("Done", Codec.BOOLEAN), (o, v) -> o.done = v, o -> o.done)
             .add()
             .append(new KeyedCodec<>("Key", Codec.STRING), (o, v) -> o.key = v, o -> o.key)
             .add()
+            .append(new KeyedCodec<>("Size", Codec.INTEGER), (o, v) -> o.size = v, o -> o.size)
+            .add()
             .build();
 
     private boolean done;
+    private boolean evalSync;
     private String key;
     private ArrayList<VMObject> contents;
+    private int size;
 
     public DefBuilderFrame() { contents = new ArrayList<>(); }
     public DefBuilderFrame(String key) { contents = new ArrayList<>(); done = false; }
     public DefBuilderFrame(DefBuilderFrame other) {
         this.done = other.done;
+        this.evalSync = other.evalSync;;
         this.key = other.key;
+        this.size = other.size;
         this.contents = new ArrayList<>(other.contents.size());
         for (var obj : other.contents) {
             this.contents.add(obj.clone());
@@ -40,7 +50,7 @@ public class DefBuilderFrame extends Frame {
     }
 
     @Override
-    public int GetSize() { return contents.size(); }
+    public int GetSize() { return size; }
 
     @Override
     public boolean IsFinished() { return done; }
@@ -68,13 +78,29 @@ public class DefBuilderFrame extends Frame {
         if (exeFrame.IsFinished()) throw new CompileException("Failed to start definition, no body after DefinitionRef");
 
         int count = 0;
+        int balance = 0; //Track inner start/end def markers.  Only end the definition if a balanced end marker is encountered.
         while (count++ < 50) {
             if (exeFrame.IsFinished()) throw new CompileException(String.format("Failed to complete definition '%s', end of frame", key));
             obj = exeFrame.Pop();
+            if (obj instanceof MetaObject meta) {
+                var op = meta.GetOperation();
+                if (op == MetaObject.MetaOperation.StartDef) {
+                    balance++;
+                } else if (op == MetaObject.MetaOperation.EndDef) {
+                    if (balance > 0) balance--;
+                    else {
+                        invocation.AddDefinition(key, new Word(contents, evalSync));
+                        invocation.SetCurrentExecutionBudget(0);
+                        done = true;
+                        return;
+                    }
+                }
+            }
+            size += obj.GetObjectSize();
 
+            contents.addLast(obj.clone());
+            if (obj instanceof IEvaluatable eval) evalSync |= eval.IsEvalSynchronous();
         }
-
-        if (done) invocation.SetCurrentExecutionBudget(0); //This is an expensive operation, only one per execution
     }
 
     @Override

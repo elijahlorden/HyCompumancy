@@ -14,14 +14,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class CustomMapCodec<T> implements Codec<T> {
+public class BoolMapCodec<T> implements Codec<T> {
 
     private final Class<T> cls;
     private final String keyField;
-    private final Function<T, String> encodeFunc;
-    private final Function<String, T> decodeFunc;
+    private final Function<T, Boolean> encodeFunc;
+    private final Function<Boolean, T> decodeFunc;
 
-    public CustomMapCodec(Class<T> cls, String keyField, Function<T, String> encodeFunc, Function<String, T> decodeFunc) {
+    public BoolMapCodec(Class<T> cls, String keyField, Function<T, Boolean> encodeFunc, Function<Boolean, T> decodeFunc) {
         this.cls = cls;
         this.keyField = keyField;
         this.encodeFunc = encodeFunc;
@@ -31,25 +31,25 @@ public class CustomMapCodec<T> implements Codec<T> {
     @Override
     public @Nullable T decode(BsonValue bsonValue, ExtraInfo extraInfo) {
         BsonDocument doc = bsonValue.asDocument();
-        String key = Codec.STRING.decode(doc.get(keyField), extraInfo);
+        boolean key = Codec.BOOLEAN.decode(doc.get(keyField), extraInfo);
         return decodeFunc.apply(key);
     }
 
     @Override
     public BsonValue encode(T t, ExtraInfo extraInfo) {
-        String key = encodeFunc.apply(t);
+        Boolean key = encodeFunc.apply(t);
         BsonDocument doc = new BsonDocument();
-        doc.put(keyField, Codec.STRING.encode(key, extraInfo));
+        doc.put(keyField, Codec.BOOLEAN.encode(key, extraInfo));
         return doc;
     }
 
     @Override
     public @NonNull Schema toSchema(@NonNull SchemaContext schemaContext) {
         ObjectSchema schema = new ObjectSchema();
-        schema.setTitle("CustomMapCodec: " + cls.getName());
+        schema.setTitle("BoolMapCodec: " + cls.getName());
         schema.setAdditionalProperties(false);
         Map<String, Schema> props = new HashMap<>();
-        props.put(keyField, schemaContext.refDefinition(Codec.STRING));
+        props.put(keyField, schemaContext.refDefinition(Codec.BOOLEAN));
         schema.setProperties(props);
         return schema;
     }

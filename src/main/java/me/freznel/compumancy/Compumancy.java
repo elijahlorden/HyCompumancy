@@ -6,12 +6,15 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.util.Config;
 import me.freznel.compumancy.casting.DefinitionStoreComponent;
 import me.freznel.compumancy.casting.InvocationComponent;
 import me.freznel.compumancy.commands.CompumancyCommandCollection;
 import me.freznel.compumancy.commands.TestCommand;
+import me.freznel.compumancy.config.CompumancyConfig;
 import me.freznel.compumancy.vm.RegisterVMObjects;
 
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,20 +37,24 @@ public class Compumancy extends JavaPlugin {
     private ComponentType<EntityStore, DefinitionStoreComponent> definitionStoreComponentType;
     public ComponentType<EntityStore, DefinitionStoreComponent> GetDefinitionStoreComponentType() { return definitionStoreComponentType; }
 
+    private final Config<CompumancyConfig> config;
+    public CompumancyConfig GetConfig() { return config.get(); }
 
     public Compumancy(JavaPluginInit init) {
         super(init);
         instance = this;
-        LOGGER.atInfo().log("Hello from %s version %s", this.getName(), this.getManifest().getVersion().toString());
+        this.config = this.withConfig("CompumancyPlugin", CompumancyConfig.CODEC);
     }
 
     @Override
     protected void setup() {
         LOGGER.at(Level.INFO).log("Running setup");
-        executor = Executors.newScheduledThreadPool(4);
 
+        executor = Executors.newScheduledThreadPool(config.get().AsyncThreadCount);
+        LOGGER.at(Level.INFO).log(String.format("Created ScheduledThreadPool with %d threads", config.get().AsyncThreadCount));
 
         RegisterVMObjects.Register();
+
         ComponentRegistryProxy<EntityStore> entityStoreComponentRegistry = this.getEntityStoreRegistry();
 
         invocationComponentType = entityStoreComponentRegistry.registerComponent(InvocationComponent.class, "InvocationComponent", InvocationComponent.CODEC);

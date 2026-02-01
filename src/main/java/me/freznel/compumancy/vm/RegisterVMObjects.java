@@ -18,29 +18,29 @@ public class RegisterVMObjects {
     public static void Register() {
 
         //Unary Operators
-        Vocabulary.BASE.Add("len", new Word(new UnaryOperatorObject(UnaryOperator.Length)));
+        Vocabulary.BASE.Add("len", new Word(UnaryOperator.Length.Instance));
         Vocabulary.BASE.AddAlias("len", "abs");
-        Vocabulary.BASE.Add("negate", new Word(new UnaryOperatorObject(UnaryOperator.SignedNegate)));
-        Vocabulary.BASE.Add("not", new Word(new UnaryOperatorObject(UnaryOperator.UnsignedNegate)));
+        Vocabulary.BASE.Add("negate", new Word(UnaryOperator.SignedNegate.Instance));
+        Vocabulary.BASE.Add("not", new Word(UnaryOperator.UnsignedNegate.Instance));
 
         //Binary Operators
-        Vocabulary.BASE.Add("+", new Word(new BinaryOperatorObject(BinaryOperator.Add)));
-        Vocabulary.BASE.Add("-", new Word(new BinaryOperatorObject(BinaryOperator.Subtract)));
-        Vocabulary.BASE.Add("*", new Word(new BinaryOperatorObject(BinaryOperator.Multiply)));
-        Vocabulary.BASE.Add("/", new Word(new BinaryOperatorObject(BinaryOperator.Divide)));
-        Vocabulary.BASE.Add("mod", new Word(new BinaryOperatorObject(BinaryOperator.Mod)));
+        Vocabulary.BASE.Add("+", new Word(BinaryOperator.Add.Instance));
+        Vocabulary.BASE.Add("-", new Word(BinaryOperator.Subtract.Instance));
+        Vocabulary.BASE.Add("*", new Word(BinaryOperator.Multiply.Instance));
+        Vocabulary.BASE.Add("/", new Word(BinaryOperator.Divide.Instance));
+        Vocabulary.BASE.Add("mod", new Word(BinaryOperator.Mod.Instance));
 
-        Vocabulary.BASE.Add("and", new Word(new BinaryOperatorObject(BinaryOperator.And)));
-        Vocabulary.BASE.Add("nand", new Word(new BinaryOperatorObject(BinaryOperator.Nand)));
-        Vocabulary.BASE.Add("or", new Word(new BinaryOperatorObject(BinaryOperator.Or)));
-        Vocabulary.BASE.Add("xor", new Word(new BinaryOperatorObject(BinaryOperator.Xor)));
+        Vocabulary.BASE.Add("and", new Word(BinaryOperator.And.Instance));
+        Vocabulary.BASE.Add("nand", new Word(BinaryOperator.Nand.Instance));
+        Vocabulary.BASE.Add("or", new Word(BinaryOperator.Or.Instance));
+        Vocabulary.BASE.Add("xor", new Word(BinaryOperator.Xor.Instance));
 
-        Vocabulary.BASE.Add("?eq", new Word(new BinaryOperatorObject(BinaryOperator.Equal)));
-        Vocabulary.BASE.Add("?neq", new Word(new BinaryOperatorObject(BinaryOperator.NotEqual)));
-        Vocabulary.BASE.Add("?gt", new Word(new BinaryOperatorObject(BinaryOperator.GreaterThan)));
-        Vocabulary.BASE.Add("?lt", new Word(new BinaryOperatorObject(BinaryOperator.LessThan)));
-        Vocabulary.BASE.Add("?geq", new Word(new BinaryOperatorObject(BinaryOperator.GreaterThanOrEqualTo)));
-        Vocabulary.BASE.Add("?leq", new Word(new BinaryOperatorObject(BinaryOperator.LessThanOrEqualTo)));
+        Vocabulary.BASE.Add("?eq", new Word(BinaryOperator.Equal.Instance));
+        Vocabulary.BASE.Add("?neq", new Word(BinaryOperator.NotEqual.Instance));
+        Vocabulary.BASE.Add("?gt", new Word(BinaryOperator.GreaterThan.Instance));
+        Vocabulary.BASE.Add("?lt", new Word(BinaryOperator.LessThan.Instance));
+        Vocabulary.BASE.Add("?geq", new Word(BinaryOperator.GreaterThanOrEqualTo.Instance));
+        Vocabulary.BASE.Add("?leq", new Word(BinaryOperator.LessThanOrEqualTo.Instance));
 
         RegisterCodecs();
         RegisterOperatorSets();
@@ -104,12 +104,12 @@ public class RegisterVMObjects {
 
         //Flow control actions
         ActionHelpers.RegisterSimpleAction("for", ForAction.class, new ForAction());
-        Vocabulary.BASE.Add(":", new Word(MetaObject.START_DEF));
-        Vocabulary.BASE.Add(";", new Word(MetaObject.END_DEF));
-        Vocabulary.BASE.Add("(", new Word(MetaObject.START_LIST));
-        Vocabulary.BASE.Add(")", new Word(MetaObject.END_LIST));
-        Vocabulary.BASE.Add("eval", new Word(MetaObject.EVAL));
-        Vocabulary.BASE.Add("eval/cc", new Word(MetaObject.EVAL_CC));
+        Vocabulary.BASE.Add(":", new Word(MetaObject.MetaOperation.StartDef.Instance));
+        Vocabulary.BASE.Add(";", new Word(MetaObject.MetaOperation.EndDef.Instance));
+        Vocabulary.BASE.Add("(", new Word(MetaObject.MetaOperation.StartList.Instance));
+        Vocabulary.BASE.Add(")", new Word(MetaObject.MetaOperation.EndList.Instance));
+        Vocabulary.BASE.Add("eval", new Word(MetaObject.MetaOperation.Eval.Instance));
+        Vocabulary.BASE.Add("eval/cc", new Word(MetaObject.MetaOperation.EvalCC.Instance));
 
         //Entity actions
         ActionHelpers.RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
@@ -123,13 +123,6 @@ public class RegisterVMObjects {
     }
 
     public static void RegisterCompilerWords() {
-        //Definition shorthand word
-        Compiler.Register(":", (tokenizer, stack) -> {
-
-
-
-
-        });
 
 
 

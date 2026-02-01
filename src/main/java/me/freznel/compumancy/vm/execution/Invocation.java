@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import me.freznel.compumancy.Compumancy;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
+import me.freznel.compumancy.vm.exceptions.CompileException;
 import me.freznel.compumancy.vm.exceptions.DefinitionNotFoundException;
 import me.freznel.compumancy.vm.exceptions.InvalidOperationException;
 import me.freznel.compumancy.vm.exceptions.StackOverflowException;
@@ -24,9 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 public class Invocation implements Runnable {
-    private static final long CHECKPOINT_INTERVAL = 1000 * 10;
-    private static final long SCHEDULE_DELAY_ASYNC = 50;
-    private static final long SCHEDULE_DELAY_SYNC = 100;
 
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
     private static final ConcurrentHashMap<UUID, Invocation> RunningInvocations = new ConcurrentHashMap<>();
@@ -170,14 +168,14 @@ public class Invocation implements Runnable {
                 if (!invocationComponent.Remove(state.GetId())) Cancel();
             }
         });
-        nextCheckpoint = System.currentTimeMillis() + CHECKPOINT_INTERVAL;
+        nextCheckpoint = System.currentTimeMillis() + Compumancy.Get().GetConfig().CheckpointInterval;
         return true;
     }
 
     private void ScheduleSync() {
         Compumancy.Get().Schedule(() -> {
             world.execute(this);
-        }, SCHEDULE_DELAY_SYNC);
+        }, Compumancy.Get().GetConfig().SyncStepDelay);
     }
 
     private void Schedule() {
@@ -187,7 +185,7 @@ public class Invocation implements Runnable {
             if (isRunningSync) {
                 ScheduleSync();
             } else {
-                Compumancy.Get().Schedule(this, SCHEDULE_DELAY_ASYNC);
+                Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay);
             }
         } else if (syncType == FrameSyncType.Sync) {
             if (!isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to world thread", id.toString()));
@@ -196,13 +194,13 @@ public class Invocation implements Runnable {
         } else {
             if (isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to background thread", id.toString()));
             isRunningSync = false;
-            Compumancy.Get().Schedule(this, SCHEDULE_DELAY_ASYNC);
+            Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay);
         }
     }
 
     public void Start() {
         if (RunningInvocations.containsKey(id) || IsCancelled() || IsFinished()) return;
-        nextCheckpoint = System.currentTimeMillis() + CHECKPOINT_INTERVAL;
+        nextCheckpoint = System.currentTimeMillis() + Compumancy.Get().GetConfig().CheckpointInterval;
         RunningInvocations.put(id, this);
         Schedule();
     }
@@ -262,7 +260,7 @@ public class Invocation implements Runnable {
             frame = def.ToExecutionFrame();
             cachedDefFrames.put(defName, frame);
             frameStack.addLast(frame);
-        } else if ((def = casterDefs.get(defName)) != null) {
+        } else if (casterDefs != null && (def = casterDefs.get(defName)) != null) {
             frame = def.ToExecutionFrame();
             cachedDefFrames.put(defName, frame);
             frameStack.addLast(frame);
@@ -272,9 +270,12 @@ public class Invocation implements Runnable {
     }
 
     public void AddDefinition(String defName, Word word) {
+        if (!definitionsAttached) throw new CompileException(String.format("Failed to save definition '%s', no definition store found", defName));
         if (fixedDefs != null && fixedDefs.Contains(defName)) {
             throw new InvalidOperationException(String.format("Attempted to override fixed definition '%s'", defName));
         }
+        if (casterDefs == null) throw new CompileException(String.format("Failed to save definition '%s', definition store is read-only", defName));
+        if (casterDefs.size() >= maxUserDefs && !casterDefs.containsKey(defName)) throw new CompileException(String.format("Failed to save definition '%s', no maximum definition count of %d reached", defName, maxUserDefs));
         casterDefs.put(defName, word);
         cachedDefFrames.remove(defName);
     }

@@ -9,6 +9,7 @@ import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.objects.VMObject;
 import org.bouncycastle.jcajce.provider.asymmetric.CONTEXT;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +38,11 @@ public final class Word implements Cloneable {
             if (sync) break;
         }
         executeSync = sync;
+    }
+
+    public Word(ArrayList<VMObject> contents, boolean executeSync) {
+        this.executeSync = executeSync;
+        this.contents = contents.toArray(new VMObject[0]);
     }
 
     public boolean GetExecuteSync() { return this.executeSync; }
