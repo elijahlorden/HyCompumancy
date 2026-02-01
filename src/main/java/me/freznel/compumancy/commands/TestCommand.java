@@ -46,17 +46,26 @@ public class TestCommand extends CommandBase {
                 var UUIDComponent = store.getComponent(sender, com.hypixel.hytale.server.core.entity.UUIDComponent.getComponentType());
                 if (UUIDComponent == null) return;
 
-                var invocation = new Invocation(world, sender, UUIDComponent.getUuid(), input, 1000);
+
 
                 var invocationComponentType = Compumancy.Get().GetInvocationComponentType();
                 var invocationComponent = store.getComponent(sender, invocationComponentType);
                 if (invocationComponent == null) {
                     invocationComponent = store.addComponent(sender, invocationComponentType);
                 }
-                invocationComponent.SetMaxInvocations(3);
+                invocationComponent.SetMaxInvocations(Compumancy.Get().GetConfig().MaxPlayerInvocations);
 
+                var defComponentType = Compumancy.Get().GetDefinitionStoreComponentType();
+                var defComponent = store.getComponent(sender, defComponentType);
+                if (defComponent == null) {
+                    defComponent = store.addComponent(sender, defComponentType);
+                }
+                defComponent.SetMaxUserDefs(Compumancy.Get().GetConfig().MaxPlayerInvocations);
+
+                var invocation = new Invocation(world, sender, UUIDComponent.getUuid(), input, 1000);
                 invocationComponent.Add(invocation);
                 invocation.Start();
+
             }, world).handle((_, e) -> {
 
                 return null;

@@ -28,7 +28,7 @@ public class DefinitionStoreComponent implements Component<EntityStore> {
             .build();
 
 
-    private ConcurrentHashMap<String, Word> userDefs;
+    private final ConcurrentHashMap<String, Word> userDefs;
     private int maxUserDefs;
     private String fixedVocabularyName;
 
@@ -47,8 +47,12 @@ public class DefinitionStoreComponent implements Component<EntityStore> {
     }
 
     public ConcurrentHashMap<String, Word> GetUserDefsMap() { return userDefs; }
+
     public int GetMaxUserDefs() { return maxUserDefs; }
+    public void SetMaxUserDefs(int maxUserDefs) { this.maxUserDefs = maxUserDefs; }
+
     public String GetFixedVocabularyName() { return fixedVocabularyName; }
+    public void SetFixedVocabularyName(String fixedVocabularyName) { this.fixedVocabularyName = fixedVocabularyName; }
 
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
