@@ -28,21 +28,17 @@ public final class InvocationState implements Cloneable {
             .add()
             .append(new KeyedCodec<>("Budget", Codec.INTEGER), (o, v) -> o.executionBudget = v == null ? 0 : v, o -> o.executionBudget)
             .add()
-            .append(new KeyedCodec<>("Owner", Codec.UUID_BINARY), (o, v) -> o.owner = v, o -> o.owner)
-            .add()
             .build();
 
     private final ArrayList<VMObject> operandStack;
     private final ArrayList<Frame> frameStack;
     private UUID id;
     private int executionBudget;
-    private UUID owner;
 
     public ArrayList<VMObject> GetOperandStack() { return this.operandStack; }
     public ArrayList<Frame> GetFrameStack() { return this.frameStack; }
     public int GetExecutionBudget() { return this.executionBudget; }
     public UUID GetId() { return this.id; }
-    public UUID GetOwner() { return this.owner; }
 
     public InvocationState() {
         operandStack = new ArrayList<>();
@@ -60,7 +56,6 @@ public final class InvocationState implements Cloneable {
 
         executionBudget = invocation.GetExecutionBudget();
         id = invocation.GetId();
-        owner = invocation.GetOwner();
     }
 
     @Override

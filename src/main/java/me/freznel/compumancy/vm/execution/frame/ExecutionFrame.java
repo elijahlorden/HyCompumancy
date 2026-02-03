@@ -91,7 +91,7 @@ public class ExecutionFrame extends Frame {
             budget -= evaluatableNext.ExecutionBudgetCost();
             evaluatableNext.Evaluate(invocation);
             index++;
-        } while (invocation.GetCurrentFrame() == this && budget > 0 && index < contents.size()); //Execute until another frame is pushed or the budget runs out
+        } while (invocation.GetCurrentFrame() == this && budget > 0 && index < contents.size() &&!invocation.IsSuspended()); //Execute until another frame is pushed or the budget runs out
         invocation.SetCurrentExecutionBudget(budget);
     }
 

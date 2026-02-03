@@ -16,12 +16,14 @@ import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.objects.BoolObject;
 import me.freznel.compumancy.vm.objects.MetaObject;
 import me.freznel.compumancy.vm.objects.VMObject;
+import me.freznel.compumancy.vm.store.InvocationStore;
 import org.bson.BsonValue;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
 /**
  * This is an example command that will simply print the name of the plugin in chat when used.
@@ -36,7 +38,7 @@ public class TestCommand extends CommandBase {
 
     @Override
     protected void executeSync(@Nonnull CommandContext ctx) {
-            var sender = ctx.senderAsPlayerRef();
+            /*var sender = ctx.senderAsPlayerRef();
             assert sender != null;
             var store = sender.getStore();
 
@@ -67,51 +69,46 @@ public class TestCommand extends CommandBase {
                     if (result.succeeded()) remaining -= consume;
                 }
                 if (remaining < 0.01) break;
-            }
+            }*/
 
 
 
-//        try {
-//            String inputString = ctx.getInputString();
-//            String cmdName = this.getName();
-//            assert cmdName != null;
-//            String input = inputString.substring(inputString.indexOf(cmdName) + this.getName().length());
-//            ctx.sendMessage(Message.raw("Processing: " + input));
-//
-//            var sender = ctx.senderAsPlayerRef();
-//            assert sender != null;
-//            var world = sender.getStore().getExternalData().getWorld();
-//            var store = world.getEntityStore().getStore();
-//
-//            CompletableFuture.runAsync(() -> {
-//                var UUIDComponent = store.getComponent(sender, com.hypixel.hytale.server.core.entity.UUIDComponent.getComponentType());
-//                if (UUIDComponent == null) return;
-//
-//                var invocationComponentType = Compumancy.Get().GetInvocationComponentType();
-//                var invocationComponent = store.getComponent(sender, invocationComponentType);
-//                if (invocationComponent == null) {
-//                    invocationComponent = store.addComponent(sender, invocationComponentType);
-//                }
-//                invocationComponent.SetMaxInvocations(Compumancy.Get().GetConfig().MaxPlayerInvocations);
-//
-//                var defComponentType = Compumancy.Get().GetDefinitionStoreComponentType();
-//                var defComponent = store.getComponent(sender, defComponentType);
-//                if (defComponent == null) {
-//                    defComponent = store.addComponent(sender, defComponentType);
-//                }
-//                defComponent.SetMaxUserDefs(Compumancy.Get().GetConfig().MaxPlayerInvocations);
-//
-//                var invocation = new Invocation(world, sender, UUIDComponent.getUuid(), input, 1000);
-//                invocationComponent.Add(invocation);
-//                invocation.Start();
-//
-//            }, world).handle((_, e) -> {
-//
-//                return null;
-//            });
-//
-//        } catch (Exception e) {
-//            ctx.sendMessage(Message.raw(e.getClass().getSimpleName() + ": " + e.getMessage()));
-//        }
+        try {
+            String inputString = ctx.getInputString();
+            String cmdName = this.getName();
+            assert cmdName != null;
+            String input = inputString.substring(inputString.indexOf(cmdName) + this.getName().length());
+            ctx.sendMessage(Message.raw("Processing: " + input));
+
+            var sender = ctx.senderAsPlayerRef();
+            assert sender != null;
+            var world = sender.getStore().getExternalData().getWorld();
+            var store = world.getEntityStore().getStore();
+
+            CompletableFuture.supplyAsync(() -> {
+                var defComponentType = Compumancy.Get().GetDefinitionStoreComponentType();
+                var defComponent = store.getComponent(sender, defComponentType);
+                if (defComponent == null) {
+                    defComponent = store.addComponent(sender, defComponentType);
+                }
+                defComponent.SetMaxUserDefs(Compumancy.Get().GetConfig().MaxPlayerDefinitions);
+
+                var UUIDComponent = store.getComponent(sender, com.hypixel.hytale.server.core.entity.UUIDComponent.getComponentType());
+                if (UUIDComponent == null) return null;
+                return UUIDComponent.getUuid();
+            }, world)
+                    .thenComposeAsync(InvocationStore::Get)
+                    .thenAcceptAsync(invocationStore -> {
+                        if (invocationStore == null) return;
+                        var invocation = new Invocation(world, sender, invocationStore, input, 1000);
+                        invocationStore.Add(invocation);
+                        invocation.Schedule();
+                    }, world).exceptionally(e -> {
+                        return null;
+                    });
+
+        } catch (Exception e) {
+            ctx.sendMessage(Message.raw(e.getClass().getSimpleName() + ": " + e.getMessage()));
+        }
     }
 }

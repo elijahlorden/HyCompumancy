@@ -14,24 +14,24 @@ public class CompumancyConfig {
             .documentation("Maximum execution time for a single invocation step (ms)")
             .add()
 
-            .append(new KeyedCodec<>("AsyncStepDelay", Codec.INTEGER), (o, v) -> o.AsyncStepDelay = v, o -> o.AsyncStepDelay)
-            .documentation("Delay between invocation steps when running on a background thread (ms)")
-            .add()
-
-            .append(new KeyedCodec<>("SyncStepDelay", Codec.INTEGER), (o, v) -> o.SyncStepDelay = v, o -> o.SyncStepDelay)
-            .documentation("Delay between invocation steps when running on a world thread (ms)")
-            .add()
-
-            .append(new KeyedCodec<>("CheckpointInterval", Codec.INTEGER), (o, v) -> o.CheckpointInterval = v, o -> o.CheckpointInterval)
-            .documentation("Delay between invocation checkpoints.  Long-running invocations will only persist their state to the InvocationComponent this often (ms)")
-            .add()
-
             .append(new KeyedCodec<>("AsyncThreadCount", Codec.INTEGER), (o, v) -> o.AsyncThreadCount = v, o -> o.AsyncThreadCount)
             .documentation("The number of threads available for async execution of invocations")
             .add()
 
-            .append(new KeyedCodec<>("MaxPlayerInvocations", Codec.INTEGER), (o, v) -> o.MaxPlayerInvocations = v, o -> o.MaxPlayerInvocations)
-            .documentation("The maximum number of invocations a player can run directly at the same time")
+            .append(new KeyedCodec<>("AsyncStepDelay", Codec.INTEGER), (o, v) -> o.AsyncStepDelay = v, o -> o.AsyncStepDelay)
+            .documentation("Base delay between invocation steps when running on a background thread (ms)")
+            .add()
+
+            .append(new KeyedCodec<>("SyncStepDelay", Codec.INTEGER), (o, v) -> o.SyncStepDelay = v, o -> o.SyncStepDelay)
+            .documentation("Base delay between invocation steps when running on a world thread (ms)")
+            .add()
+
+            .append(new KeyedCodec<>("DelayThreshold", Codec.INTEGER), (o, v) -> o.DelayThreshold = v, o -> o.DelayThreshold)
+            .documentation("The number of invocation steps scheduled per second before the delay kicks in, per player")
+            .add()
+
+            .append(new KeyedCodec<>("CheckpointInterval", Codec.INTEGER), (o, v) -> o.DelayPerStep = v, o -> o.DelayPerStep)
+            .documentation("How many milliseconds to add onto the invocation step delay per step scheduled over the threshold")
             .add()
 
             .append(new KeyedCodec<>("MaxPlayerDefinitions", Codec.INTEGER), (o, v) -> o.MaxPlayerDefinitions = v, o -> o.MaxPlayerDefinitions)
@@ -45,12 +45,12 @@ public class CompumancyConfig {
             .build();
 
     public int MaxExecutionBudget = 512;
-    public int MaxExecutionTime = 5;
+    public int MaxExecutionTime = 2;
     public int AsyncStepDelay = 50;
     public int SyncStepDelay = 100;
-    public int CheckpointInterval = 5000;
     public int AsyncThreadCount = 4;
-    public int MaxPlayerInvocations = 3;
+    public int DelayThreshold = 100;
+    public int DelayPerStep = 1;
     public int MaxPlayerDefinitions = 256;
     public int MaxDefinitionSize = 1024;
 

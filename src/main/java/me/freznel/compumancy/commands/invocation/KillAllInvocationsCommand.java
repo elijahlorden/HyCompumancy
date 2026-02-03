@@ -12,6 +12,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import me.freznel.compumancy.Compumancy;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.execution.InvocationState;
+import me.freznel.compumancy.vm.store.InvocationStore;
 import org.jspecify.annotations.NonNull;
 
 import java.util.UUID;
@@ -24,23 +25,10 @@ public class KillAllInvocationsCommand extends AbstractPlayerCommand {
 
     @Override
     protected void execute(@NonNull CommandContext commandContext, @NonNull Store<EntityStore> store, @NonNull Ref<EntityStore> ref, @NonNull PlayerRef playerRef, @NonNull World world) {
-        var invocationComponentType = Compumancy.Get().GetInvocationComponentType();
-        var invocationComponent = store.getComponent(ref, invocationComponentType);
-        if (invocationComponent == null) {
-            invocationComponent = store.addComponent(ref, invocationComponentType);
-        }
-
-        var iterator = invocationComponent.GetIterator();
-        int killed = 0;
-        while (iterator.hasNext()) {
-            var next = iterator.next();
-            UUID invocationId = UUID.fromString(next.getKey());
-            var invocation = Invocation.GetRunningInvocation(invocationId);
-            if (invocation != null) invocation.Cancel();
-            iterator.remove();
-            killed++;
-        }
-
-        playerRef.sendMessage(Message.raw(String.format("Killed %d invocations", killed)));
+        InvocationStore.Get(playerRef.getUuid()).thenAccept(invocationStore -> {
+            int count = invocationStore.Count();
+            invocationStore.KillAll();
+            playerRef.sendMessage(Message.raw(String.format("Killed %d invocations", count)));
+        });
     }
 }

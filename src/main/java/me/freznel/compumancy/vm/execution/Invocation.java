@@ -18,25 +18,22 @@ import me.freznel.compumancy.vm.execution.frame.CompileFrame;
 import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.frame.Frame;
 import me.freznel.compumancy.vm.objects.VMObject;
+import me.freznel.compumancy.vm.store.InvocationStore;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 public class Invocation implements Runnable {
 
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
-    private static final ConcurrentHashMap<UUID, Invocation> RunningInvocations = new ConcurrentHashMap<>();
-
-    public static Invocation GetRunningInvocation(UUID id) {
-        if (!RunningInvocations.containsKey(id)) return null;
-        return RunningInvocations.get(id);
-    }
 
     private World world;
     private Ref<EntityStore> caster;
-    private UUID owner;
+    private InvocationStore store;
 
     private ArrayList<VMObject> operandStack;
     private ArrayList<Frame> frameStack;
@@ -45,8 +42,11 @@ public class Invocation implements Runnable {
 
     private final UUID id;
     private long nextCheckpoint;
-    private final AtomicBoolean isCanceled;
+    private final AtomicBoolean suspended;
+    private boolean errored;
     private boolean isRunningSync;
+
+    public final AtomicReference<CompletableFuture<InvocationState>> SuspendFuture;
 
     private boolean definitionsAttached;
     private Map<String, ExecutionFrame> cachedDefFrames;
@@ -56,56 +56,59 @@ public class Invocation implements Runnable {
 
     public Invocation() {
         this.id = UUID.randomUUID();
-        this.isCanceled = new AtomicBoolean(false);
+        this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
+        this.SuspendFuture = new AtomicReference<>();
     }
 
-    public Invocation(World world, Ref<EntityStore> caster, UUID owner, ArrayList<VMObject> contents, int executionBudget) {
+    public Invocation(World world, Ref<EntityStore> caster, InvocationStore store, ArrayList<VMObject> contents, int executionBudget) {
         this.operandStack = new ArrayList<>();
         this.frameStack = new ArrayList<>();
         this.executionBudget = executionBudget;
         this.currentExecutionBudget = executionBudget;
         this.caster = caster;
-        this.owner = owner;
+        this.store = store;
         this.world = world;
         this.frameStack.addLast(new ExecutionFrame(contents));
         this.id = UUID.randomUUID();
-        this.isCanceled = new AtomicBoolean(false);
+        this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
+        this.SuspendFuture = new AtomicReference<>();
         TryAttachDefinitionComponent();
     }
 
-    public Invocation(World world, Ref<EntityStore> caster, UUID owner, String compileString, int executionBudget) {
+    public Invocation(World world, Ref<EntityStore> caster, InvocationStore store, String compileString, int executionBudget) {
         this.operandStack = new ArrayList<>();
         this.frameStack = new ArrayList<>();
         this.executionBudget = executionBudget;
         this.currentExecutionBudget = executionBudget;
         this.caster = caster;
-        this.owner = owner;
+        this.store = store;
         this.world = world;
         this.id = UUID.randomUUID();
-        this.isCanceled = new AtomicBoolean(false);
+        this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
+        this.SuspendFuture = new AtomicReference<>();
         PushFrame(new CompileFrame(compileString));
         TryAttachDefinitionComponent();
     }
 
-    public Invocation(World world, Ref<EntityStore> caster, InvocationState state) {
+    public Invocation(World world, Ref<EntityStore> caster, InvocationState state, InvocationStore store) {
         this.caster = caster;
         this.world = world;
         this.executionBudget = state.GetExecutionBudget();
         this.operandStack = state.GetOperandStack();
         this.frameStack = state.GetFrameStack();
         this.id = state.GetId();
-        this.isCanceled = new AtomicBoolean(false);
+        this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
-        this.owner = state.GetOwner();
+        this.SuspendFuture = new AtomicReference<>();
         TryAttachDefinitionComponent();
     }
 
     public World GetWorld() { return world; }
     public Ref<EntityStore> GetCaster() { return caster; }
-    public UUID GetOwner() { return owner; }
+    public InvocationStore GetStore() { return store; }
 
     public void SetOperandStack(ArrayList<VMObject> operandStack) { this.operandStack = operandStack; }
     public ArrayList<VMObject> GetOperandStack() { return this.operandStack; }
@@ -124,6 +127,8 @@ public class Invocation implements Runnable {
         if (frameStack.size() > 128) throw new StackOverflowException("Maximum execution depth of 128 exceeded");
     }
     public boolean IsRunningSync() { return this.isRunningSync; }
+    public boolean IsSuspended() { return this.suspended.get(); }
+    public void Suspend() { this.suspended.set(true); }
 
     public int OperandCount() { return operandStack.size(); }
     public VMObject Pop() { return operandStack.removeLast(); }
@@ -137,7 +142,7 @@ public class Invocation implements Runnable {
     public void Step() {
         long interruptAt = System.nanoTime() + 1_000_000 * 5; //+5ms maximum
         currentExecutionBudget = executionBudget;
-        while (currentExecutionBudget > 0 && !frameStack.isEmpty() && System.nanoTime() < interruptAt) {
+        while (currentExecutionBudget > 0 && !frameStack.isEmpty() && System.nanoTime() < interruptAt && !IsSuspended()) {
             var frame = frameStack.getLast();
             if (frame.IsFinished()) { frameStack.removeLast(); continue; }
             if (IsWrongSync(frame.GetFrameSyncType())) break;
@@ -149,11 +154,8 @@ public class Invocation implements Runnable {
         return ((syncType == FrameSyncType.Sync && !isRunningSync) || (syncType == FrameSyncType.Async && isRunningSync));
     }
 
-    public void Cancel() { isCanceled.set(true); }
-    public boolean IsCancelled() { return isCanceled.get(); }
-
     //Save the state of this invocation to the InvocationComponent.  Cancel the invocation if the entity has become invalid.
-    private boolean Checkpoint(boolean force, boolean replace) {
+    /*private boolean Checkpoint(boolean force, boolean replace) {
         if (!force && System.currentTimeMillis() < nextCheckpoint) return true;
         if (!caster.isValid()) return false;
         final var state = new InvocationState(this);
@@ -170,65 +172,54 @@ public class Invocation implements Runnable {
         });
         nextCheckpoint = System.currentTimeMillis() + Compumancy.Get().GetConfig().CheckpointInterval;
         return true;
-    }
+    }*/
 
-    private void ScheduleSync() {
+    private void ScheduleSync(int additionalDelay) {
         Compumancy.Get().Schedule(() -> {
             world.execute(this);
-        }, Compumancy.Get().GetConfig().SyncStepDelay);
+        }, Compumancy.Get().GetConfig().SyncStepDelay + additionalDelay);
     }
 
-    private void Schedule() {
+    public boolean Schedule() {
+        if (errored || IsFinished()) return false;
+        suspended.set(false);
         var nextFrame = frameStack.getLast();
         var syncType = nextFrame.GetFrameSyncType();
+        int additionalDelay = store.resumeDelay();
         if (syncType == FrameSyncType.Neutral) {
             if (isRunningSync) {
-                ScheduleSync();
+                ScheduleSync(additionalDelay);
             } else {
-                Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay);
+                Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
             }
         } else if (syncType == FrameSyncType.Sync) {
             if (!isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to world thread", id.toString()));
             isRunningSync = true;
-            ScheduleSync();
+            ScheduleSync(additionalDelay);
         } else {
             if (isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to background thread", id.toString()));
             isRunningSync = false;
-            Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay);
+            Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
         }
-    }
-
-    public void Start() {
-        if (RunningInvocations.containsKey(id) || IsCancelled() || IsFinished()) return;
-        nextCheckpoint = System.currentTimeMillis() + Compumancy.Get().GetConfig().CheckpointInterval;
-        RunningInvocations.put(id, this);
-        Schedule();
-    }
-
-    private void End() {
-        RunningInvocations.remove(id);
-        isCanceled.set(true);
-        Checkpoint(true, false);
-        Logger.at(Level.INFO).log(String.format("Ended invocation %s", id.toString()));
+        return true;
     }
 
     @Override
     public void run() {
-        //Logger.at(Level.INFO).log(String.format("Running invocation %s", id.toString()));
         try {
-            if (IsCancelled()) { End(); return; }
             //Logger.at(Level.INFO).log(String.format("Stepping invocation %s", id.toString()));
             Step();
-            if (Checkpoint(false, true) && !IsFinished() && !IsCancelled()) {
-                Schedule();
-            } else {
-                End();
+            if (IsSuspended()) {
+                var future = SuspendFuture.getAndSet(null);
+                if (future != null) future.complete(new InvocationState(this));
             }
+            if (!IsFinished() && !IsSuspended()) Schedule();
         } catch (Exception e) {
             Logger.at(Level.INFO).log(String.format("Invocation %s terminated by %s: %s", id.toString(), e.getClass().getSimpleName(), e.getMessage()));
-            var player = Universe.get().getPlayer(owner);
+            var player = Universe.get().getPlayer(store.GetOwner());
             if (player != null) player.sendMessage(Message.raw(String.format("An invocation failed with %s: %s", e.getClass().getSimpleName(), e.getMessage())));
-            End();
+            errored = true;
+            store.Kill(id);
             throw e;
         }
     }

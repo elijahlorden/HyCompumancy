@@ -13,8 +13,10 @@ import me.freznel.compumancy.commands.CompumancyCommandCollection;
 import me.freznel.compumancy.commands.TestCommand;
 import me.freznel.compumancy.config.CompumancyConfig;
 import me.freznel.compumancy.vm.RegisterVMObjects;
+import me.freznel.compumancy.vm.store.InvocationStore;
 
 import java.util.Locale;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +29,7 @@ public class Compumancy extends JavaPlugin {
     public static Compumancy Get() { return instance; }
 
     private ScheduledExecutorService executor;
+    public Executor GetExecutor() { return executor; }
     public void Schedule(Runnable runnable, long delay) {
         executor.schedule(runnable, delay, TimeUnit.MILLISECONDS);
     }
@@ -51,6 +54,8 @@ public class Compumancy extends JavaPlugin {
         LOGGER.at(Level.INFO).log("Running setup");
 
         executor = Executors.newScheduledThreadPool(config.get().AsyncThreadCount);
+        executor.scheduleAtFixedRate(InvocationStore::ResetExecuteCount, 1000, 1000, TimeUnit.MILLISECONDS);
+
         LOGGER.at(Level.INFO).log(String.format("Created ScheduledThreadPool with %d threads", config.get().AsyncThreadCount));
 
         RegisterVMObjects.Register();
