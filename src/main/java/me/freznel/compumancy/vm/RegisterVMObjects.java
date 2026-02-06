@@ -64,7 +64,7 @@ public class RegisterVMObjects {
 
         //Frames
         Frame.CODEC.register("Exe", ExecutionFrame.class, ExecutionFrame.CODEC);
-        Frame.CODEC.register("Numeric", NumericIteratorFrame.class, NumericIteratorFrame.CODEC);
+        Frame.CODEC.register("NumIter", NumericIteratorFrame.class, NumericIteratorFrame.CODEC);
         Frame.CODEC.register("Compile", CompileFrame.class, CompileFrame.CODEC);
         Frame.CODEC.register("DefBuilder", DefBuilderFrame.class, DefBuilderFrame.CODEC);
         Frame.CODEC.register("DefSync", DefSyncFrame.class, DefSyncFrame.CODEC);

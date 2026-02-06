@@ -4,9 +4,9 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
-import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
-import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.VMException;
+import me.freznel.compumancy.vm.execution.Invocation;
+import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.interfaces.IExecutable;
 
@@ -24,17 +24,39 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     private ArrayList<VMObject> contents;
     private boolean executeSync;
 
-    public ListObject() { contents = new ArrayList<>(); }
-    public ListObject(ArrayList<VMObject> contents) { this.contents = contents; }
-    public ListObject(ArrayList<VMObject> contents, boolean executeSync) { this.contents = contents; this.executeSync = executeSync; }
+    public ListObject() {
+        contents = new ArrayList<>();
+    }
 
-    public ArrayList<VMObject> GetContents() { return this.contents; }
-    public void SetContents(ArrayList<VMObject> contents) { this.contents = contents; }
+    public ListObject(ArrayList<VMObject> contents) {
+        this.contents = contents;
+    }
 
-    public boolean GetExecuteSync() { return this.executeSync; }
-    public void SetExecuteSync(boolean executeSync) { this.executeSync = executeSync; }
+    public ListObject(ArrayList<VMObject> contents, boolean executeSync) {
+        this.contents = contents;
+        this.executeSync = executeSync;
+    }
 
-    public VMObject[] GetContentsArray() { return this.contents.toArray(new VMObject[0]); }
+    public ArrayList<VMObject> GetContents() {
+        return this.contents;
+    }
+
+    public void SetContents(ArrayList<VMObject> contents) {
+        this.contents = contents;
+    }
+
+    public boolean GetExecuteSync() {
+        return this.executeSync;
+    }
+
+    public void SetExecuteSync(boolean executeSync) {
+        this.executeSync = executeSync;
+    }
+
+    public VMObject[] GetContentsArray() {
+        return this.contents.toArray(new VMObject[0]);
+    }
+
     public void SetContentsArray(VMObject[] contents) {
         this.contents = new ArrayList<>();
         this.contents.addAll(Arrays.asList(contents));
@@ -60,7 +82,7 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
         if (contents == null || contents.isEmpty()) return "{ }";
         StringBuilder sb = new StringBuilder();
         sb.append("{ ");
-        for (int i=0; i<contents.size(); i++) {
+        for (int i = 0; i < contents.size(); i++) {
             sb.append(contents.get(i).toString());
             if (i != contents.size() - 1) sb.append(", ");
         }
@@ -99,5 +121,7 @@ public class ListObject extends VMObject implements IEvaluatable, IExecutable {
     }
 
     @Override
-    public boolean IsExecuteSynchronous() { return executeSync; }
+    public boolean IsExecuteSynchronous() {
+        return executeSync;
+    }
 }
