@@ -101,8 +101,7 @@ public class TestCommand extends CommandBase {
                     .thenAcceptAsync(invocationStore -> {
                         if (invocationStore == null) return;
                         var invocation = new Invocation(world, sender, invocationStore, input, 1000);
-                        invocationStore.Add(invocation);
-                        invocation.Schedule();
+                        invocationStore.Resume(invocation);
                     }, world).exceptionally(e -> {
                         return null;
                     });

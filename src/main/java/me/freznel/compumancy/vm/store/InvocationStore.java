@@ -4,16 +4,19 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.ExtraInfo;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
-import com.hypixel.hytale.codec.codecs.map.MapCodec;
+import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.BsonUtil;
 import me.freznel.compumancy.Compumancy;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.execution.InvocationState;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.stream.*;
-import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,11 +26,13 @@ public class InvocationStore {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
 
     public static final BuilderCodec<InvocationStore> CODEC = BuilderCodec.builder(InvocationStore.class, InvocationStore::new)
-            .append(new KeyedCodec<>("Map", new MapCodec<>(InvocationState.CODEC, HashMap::new)),
-                    (o, v) -> {
-                        if (!v.isEmpty()) o.savedInvocations.putAll(v);
+            .append(new KeyedCodec<>("Invocations", new ArrayCodec<>(InvocationState.CODEC, InvocationState[]::new)),
+                    (o, states) -> {
+                        for (InvocationState state : states) {
+                            o.loadedInvocations.put(state.GetId(), state);
+                        }
                     },
-                    o -> o.savedInvocations)
+                    o -> o.saveStates.toArray(new InvocationState[0]))
             .add()
             .append(new KeyedCodec<>("Owner", Codec.UUID_BINARY), (o, v) -> o.owner = v, o -> o.owner)
             .add()
@@ -36,6 +41,7 @@ public class InvocationStore {
     private static final ConcurrentHashMap<UUID, InvocationStore> stores = new ConcurrentHashMap<>();
 
     public static CompletableFuture<InvocationStore> Get(UUID owner) {
+        if (stores.containsKey(owner)) return CompletableFuture.completedFuture(stores.get(owner));
         return CompletableFuture.supplyAsync(() -> {
             return stores.computeIfAbsent(owner, _ -> {
                 var path = Compumancy.Get().getDataDirectory()
@@ -46,13 +52,12 @@ public class InvocationStore {
                 if (doc == null) return new InvocationStore(owner);
                 var dec = CODEC.decode(doc, new ExtraInfo());
                 if (dec != null) {
-                    dec.Load();
                     return dec;
                 } else {
                     return new InvocationStore(owner);
                 }
             });
-        }, Compumancy.Get().GetExecutor());
+        }, Compumancy.Get().GetDaemonExecutor());
     }
 
     public static boolean IsLoaded(UUID owner) { return stores.containsKey(owner); }
@@ -63,18 +68,34 @@ public class InvocationStore {
         }
     }
 
+    public static synchronized void SaveAll(boolean suspend) {
+        long start = System.nanoTime();
+        var futures = new ArrayList<CompletableFuture<Integer>>();
+
+        for (var store : stores.values()) {
+            futures.add(store.Save(suspend));
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        int count = futures.stream().mapToInt(CompletableFuture::join).sum();
+        long delta = (System.nanoTime() - start) / 1_000_000;
+        Logger.at(Level.INFO).log(String.format("Saved %d invocations in %dms", count, delta));
+    }
+
     private UUID owner;
-    private final ConcurrentHashMap<String, InvocationState> savedInvocations;
+    private final ArrayList<InvocationState> saveStates;
 
     private final int exeCapacity;
     private final int exeDelayStep;
     private final AtomicInteger exeCount;
 
+    private final ConcurrentHashMap<UUID, InvocationState> loadedInvocations;
     private final ConcurrentHashMap<UUID, Invocation> invocations;
 
     private InvocationStore() {
-        savedInvocations = new ConcurrentHashMap<>();
+        saveStates = new ArrayList<>();
         invocations = new ConcurrentHashMap<>();
+        loadedInvocations = new ConcurrentHashMap<>();
         exeCapacity = Compumancy.Get().GetConfig().DelayThreshold;
         exeDelayStep = Compumancy.Get().GetConfig().DelayPerStep;
         exeCount = new AtomicInteger(0);
@@ -85,54 +106,57 @@ public class InvocationStore {
     public UUID GetOwner() { return owner; }
 
     public int Count() { return invocations.size(); }
-    public boolean IsFull() { return invocations.size() >= exeCapacity; }
 
     public int resumeDelay() {
         int newCount = exeCount.accumulateAndGet(1, Integer::sum);
         return newCount > exeCapacity ? (newCount - exeCapacity) * exeDelayStep : 0;
     }
 
-    public void Load() {
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+    public CompletableFuture<Integer> Save(boolean suspend) {
+        return CompletableFuture.supplyAsync(() -> {
+            saveStates.clear();
+            ArrayList<CompletableFuture<InvocationState>> persistFutures = new ArrayList<>(invocations.size());
 
-    }
-
-    public void Persist(boolean reschedule) {
-        savedInvocations.clear();
-        ArrayList<CompletableFuture<InvocationState>> persistFutures = new ArrayList<>(invocations.size());
-
-        for (var invocation : invocations.values()) {
-            if (invocation.IsFinished()) {
-                Kill(invocation.GetId());
-            } else if (invocation.IsSuspended()) {
-                savedInvocations.put(invocation.GetId().toString(), new InvocationState(invocation));
-            } else { //This is horrifying.  Find a better way to do this.
-                var future = new CompletableFuture<InvocationState>();
-                persistFutures.add(future);
-                future.thenAccept(state -> {
-                    savedInvocations.put(invocation.GetId().toString(), state);
-                    if (reschedule) invocation.Schedule();
-                });
-                invocation.SuspendFuture.set(future);
-                invocation.Suspend();
+            for (var invocation : invocations.values()) {
+                if (suspend) invocation.Suspend();
+                synchronized (invocation) {
+                    saveStates.add(new InvocationState(invocation));
+                }
             }
-        }
 
-        CompletableFuture.allOf(persistFutures.toArray(new CompletableFuture[0])).thenRun(() -> {
-            //TODO: Actually save everything to the file
-        });
+            var path = Compumancy.Get().getDataDirectory()
+                    .resolve("store")
+                    .resolve("invocation")
+                    .resolve(owner.toString() + ".bson");
+            try {
+                BsonUtil.writeSync(path, CODEC, this, Logger);
+                return saveStates.size();
+            } catch (Exception e) {
+                return 0;
+            }
+        }, Compumancy.Get().GetExecutor()); //Run on the high-priority blocking executor
     }
 
-    public boolean Add(Invocation invocation) {
+    public boolean Resume(Invocation invocation) {
         var id = invocation.GetId();
-        if (IsFull() || invocations.containsKey(id)) return false;
+        if (invocations.containsKey(id)) return false;
         invocations.put(id, invocation);
         var ref = invocation.GetCaster();
+        if (!ref.isValid()) return false;
         invocation.GetWorld().execute(() -> {
-            if (!ref.isValid()) return;
+            if (!ref.isValid()) {
+                invocations.remove(id);
+            }
             var store = ref.getStore();
             var comp = store.getComponent(ref, Compumancy.Get().GetInvocationComponentType());
             if (comp == null) comp = store.addComponent(ref, Compumancy.Get().GetInvocationComponentType());
+            comp.SetOwner(owner);
             comp.Add(id);
+            if (!invocation.Schedule()) {
+                comp.Remove(id);
+                invocations.remove(id);
+            }
         });
         return true;
     }
@@ -149,6 +173,7 @@ public class InvocationStore {
         if (invocation == null) return false;
         invocation.Suspend();
         var ref = invocation.GetCaster();
+        if (!ref.isValid()) return true;
         invocation.GetWorld().execute(() -> {
             if (!ref.isValid()) return;
             var store = ref.getStore();
@@ -158,14 +183,23 @@ public class InvocationStore {
         return true;
     }
 
-    public boolean Resume(UUID id) {
+    public boolean Resume(UUID id, Ref<EntityStore> caster, World world) {
         var invocation = invocations.get(id);
-        if (invocation == null) return false;
-        if (!invocation.Schedule()) {
+        if (invocation == null) {
+            var state = loadedInvocations.get(id);
+            if (state == null) return false;
+            var restored = new Invocation(world, caster, state, this);
+            if (!restored.Schedule()) {
+                return false;
+            }
+            invocations.put(id, restored);
+            return true;
+        } else if (invocation.Schedule(caster, world)) {
+            return true;
+        } else {
             invocations.remove(id);
             return false;
         }
-        return true;
     }
 
     public void KillAll() {
@@ -174,7 +208,7 @@ public class InvocationStore {
                 .forEach((world, invocations) -> {
                     var store = world.getEntityStore().getStore();
                     world.execute(() -> {
-                        for (var invocation :invocations) {
+                        for (var invocation : invocations) {
                             this.invocations.remove(invocation.GetId());
                             invocation.Suspend();
                             var ref = invocation.GetCaster();

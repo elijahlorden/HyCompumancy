@@ -7,15 +7,14 @@ import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.Config;
-import me.freznel.compumancy.casting.DefinitionStoreComponent;
-import me.freznel.compumancy.casting.InvocationComponent;
+import com.hypixel.hytale.server.core.util.concurrent.ThreadUtil;
+import me.freznel.compumancy.ecs.component.DefinitionStoreComponent;
+import me.freznel.compumancy.ecs.component.InvocationComponent;
 import me.freznel.compumancy.commands.CompumancyCommandCollection;
-import me.freznel.compumancy.commands.TestCommand;
 import me.freznel.compumancy.config.CompumancyConfig;
 import me.freznel.compumancy.vm.RegisterVMObjects;
 import me.freznel.compumancy.vm.store.InvocationStore;
 
-import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,10 +28,13 @@ public class Compumancy extends JavaPlugin {
     public static Compumancy Get() { return instance; }
 
     private ScheduledExecutorService executor;
-    public Executor GetExecutor() { return executor; }
-    public void Schedule(Runnable runnable, long delay) {
+    public Executor GetDaemonExecutor() { return executor; }
+    public void ScheduleDaemon(Runnable runnable, long delay) {
         executor.schedule(runnable, delay, TimeUnit.MILLISECONDS);
     }
+
+    private Executor userThreadPool;
+    public Executor GetExecutor() { return userThreadPool; }
 
     private ComponentType<EntityStore, InvocationComponent> invocationComponentType;
     public ComponentType<EntityStore, InvocationComponent> GetInvocationComponentType() { return invocationComponentType; }
@@ -58,12 +60,18 @@ public class Compumancy extends JavaPlugin {
 
         LOGGER.at(Level.INFO).log(String.format("Created ScheduledThreadPool with %d threads", config.get().AsyncThreadCount));
 
+        userThreadPool = ThreadUtil.newCachedThreadPool(32, Thread::new);
+
         RegisterVMObjects.Register();
 
         ComponentRegistryProxy<EntityStore> entityStoreComponentRegistry = this.getEntityStoreRegistry();
 
+        //Register components
         invocationComponentType = entityStoreComponentRegistry.registerComponent(InvocationComponent.class, "InvocationComponent", InvocationComponent.CODEC);
         definitionStoreComponentType = entityStoreComponentRegistry.registerComponent(DefinitionStoreComponent.class, "DefinitionStoreComponent", DefinitionStoreComponent.CODEC);
+
+        //Register systems
+        entityStoreComponentRegistry.registerSystem(new InvocationComponent.InvocationComponentRefSystem());
 
         this.getCommandRegistry().registerCommand(new CompumancyCommandCollection());
     }
@@ -72,6 +80,7 @@ public class Compumancy extends JavaPlugin {
 
     @Override
     protected void shutdown() {
+        InvocationStore.SaveAll(true);
         executor.shutdown();
     }
 

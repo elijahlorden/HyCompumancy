@@ -89,7 +89,7 @@ public class DefBuilderFrame extends Frame {
                 } else if (op == MetaObject.MetaOperation.EndDef) {
                     if (balance > 0) balance--;
                     else {
-                        invocation.AddDefinition(key, new Word(contents, evalSync));
+                        invocation.StoreDefinition(key, new Word(contents, evalSync));
                         invocation.SetCurrentExecutionBudget(0);
                         done = true;
                         return;
@@ -97,7 +97,7 @@ public class DefBuilderFrame extends Frame {
                 }
             }
             size += obj.GetObjectSize();
-
+            if (size > 1024) throw new CompileException(String.format("Definition '%s' exceeded maximum size of 1024", key));
             contents.addLast(obj.clone());
             if (obj instanceof IEvaluatable eval) evalSync |= eval.IsEvalSynchronous();
         }

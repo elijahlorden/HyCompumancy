@@ -89,8 +89,8 @@ public class ExecutionFrame extends Frame {
             if (!(next instanceof IEvaluatable evaluatableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetObjectName());
             if (!executingSync && evaluatableNext.IsEvalSynchronous()) { executeSync = true; break; } //Stop if the next word requires sync and not currently sync
             budget -= evaluatableNext.ExecutionBudgetCost();
-            evaluatableNext.Evaluate(invocation);
             index++;
+            evaluatableNext.Evaluate(invocation);
         } while (invocation.GetCurrentFrame() == this && budget > 0 && index < contents.size() &&!invocation.IsSuspended()); //Execute until another frame is pushed or the budget runs out
         invocation.SetCurrentExecutionBudget(budget);
     }

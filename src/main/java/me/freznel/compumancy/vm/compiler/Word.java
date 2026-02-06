@@ -45,6 +45,8 @@ public final class Word implements Cloneable {
         this.contents = contents.toArray(new VMObject[0]);
     }
 
+    public int GetSize() { return this.contents.length; }
+
     public boolean GetExecuteSync() { return this.executeSync; }
 
     public void AddContentsToList(List<VMObject> list) {

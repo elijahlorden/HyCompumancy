@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import me.freznel.compumancy.Compumancy;
+import me.freznel.compumancy.ecs.component.IDefinitionStore;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
 import me.freznel.compumancy.vm.exceptions.CompileException;
@@ -15,16 +16,16 @@ import me.freznel.compumancy.vm.exceptions.DefinitionNotFoundException;
 import me.freznel.compumancy.vm.exceptions.InvalidOperationException;
 import me.freznel.compumancy.vm.exceptions.StackOverflowException;
 import me.freznel.compumancy.vm.execution.frame.CompileFrame;
+import me.freznel.compumancy.vm.execution.frame.DefSyncFrame;
 import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.frame.Frame;
+import me.freznel.compumancy.vm.objects.ListObject;
 import me.freznel.compumancy.vm.objects.VMObject;
 import me.freznel.compumancy.vm.store.InvocationStore;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 public class Invocation implements Runnable {
@@ -46,8 +47,6 @@ public class Invocation implements Runnable {
     private boolean errored;
     private boolean isRunningSync;
 
-    public final AtomicReference<CompletableFuture<InvocationState>> SuspendFuture;
-
     private boolean definitionsAttached;
     private Map<String, ExecutionFrame> cachedDefFrames;
     private ConcurrentHashMap<String, Word> casterDefs;
@@ -58,7 +57,6 @@ public class Invocation implements Runnable {
         this.id = UUID.randomUUID();
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
-        this.SuspendFuture = new AtomicReference<>();
     }
 
     public Invocation(World world, Ref<EntityStore> caster, InvocationStore store, ArrayList<VMObject> contents, int executionBudget) {
@@ -73,8 +71,6 @@ public class Invocation implements Runnable {
         this.id = UUID.randomUUID();
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
-        this.SuspendFuture = new AtomicReference<>();
-        TryAttachDefinitionComponent();
     }
 
     public Invocation(World world, Ref<EntityStore> caster, InvocationStore store, String compileString, int executionBudget) {
@@ -88,9 +84,7 @@ public class Invocation implements Runnable {
         this.id = UUID.randomUUID();
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
-        this.SuspendFuture = new AtomicReference<>();
         PushFrame(new CompileFrame(compileString));
-        TryAttachDefinitionComponent();
     }
 
     public Invocation(World world, Ref<EntityStore> caster, InvocationState state, InvocationStore store) {
@@ -102,8 +96,7 @@ public class Invocation implements Runnable {
         this.id = state.GetId();
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
-        this.SuspendFuture = new AtomicReference<>();
-        TryAttachDefinitionComponent();
+        this.store = store;
     }
 
     public World GetWorld() { return world; }
@@ -123,6 +116,7 @@ public class Invocation implements Runnable {
     public Frame GetCurrentFrame() { return frameStack.isEmpty() ? null : frameStack.getLast(); }
     public boolean IsFinished() { return frameStack.isEmpty(); }
     public void PushFrame(Frame frame) {
+        while (!frameStack.isEmpty() && frameStack.getLast().IsFinished()) frameStack.removeLast();
         frameStack.addLast(frame);
         if (frameStack.size() > 128) throw new StackOverflowException("Maximum execution depth of 128 exceeded");
     }
@@ -175,14 +169,13 @@ public class Invocation implements Runnable {
     }*/
 
     private void ScheduleSync(int additionalDelay) {
-        Compumancy.Get().Schedule(() -> {
+        Compumancy.Get().ScheduleDaemon(() -> {
             world.execute(this);
         }, Compumancy.Get().GetConfig().SyncStepDelay + additionalDelay);
     }
 
     public boolean Schedule() {
         if (errored || IsFinished()) return false;
-        suspended.set(false);
         var nextFrame = frameStack.getLast();
         var syncType = nextFrame.GetFrameSyncType();
         int additionalDelay = store.resumeDelay();
@@ -190,7 +183,7 @@ public class Invocation implements Runnable {
             if (isRunningSync) {
                 ScheduleSync(additionalDelay);
             } else {
-                Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
+                Compumancy.Get().ScheduleDaemon(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
             }
         } else if (syncType == FrameSyncType.Sync) {
             if (!isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to world thread", id.toString()));
@@ -199,40 +192,53 @@ public class Invocation implements Runnable {
         } else {
             if (isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to background thread", id.toString()));
             isRunningSync = false;
-            Compumancy.Get().Schedule(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
+            Compumancy.Get().ScheduleDaemon(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
         }
+        suspended.set(false);
         return true;
+    }
+
+    public boolean Schedule(Ref<EntityStore> caster, World world) {
+        this.caster = caster;
+        this.world = world;
+        return Schedule();
     }
 
     @Override
     public void run() {
-        try {
-            //Logger.at(Level.INFO).log(String.format("Stepping invocation %s", id.toString()));
-            Step();
-            if (IsSuspended()) {
-                var future = SuspendFuture.getAndSet(null);
-                if (future != null) future.complete(new InvocationState(this));
+        synchronized (this) {
+            try {
+                //Logger.at(Level.INFO).log(String.format("Stepping invocation %s", id.toString()));
+                if (IsFinished()) { store.Kill(id); return; }
+                if (IsSuspended()) return;
+                Step();
+                if (IsFinished()) { store.Kill(id); return; }
+                if (IsSuspended()) return;
+                Schedule();
+            } catch (Exception e) {
+                Logger.at(Level.INFO).log(String.format("Invocation %s terminated by %s: %s", id.toString(), e.getClass().getSimpleName(), e.getMessage()));
+                var player = Universe.get().getPlayer(store.GetOwner());
+                if (player != null)
+                    player.sendMessage(Message.raw(String.format("An invocation failed with %s: %s", e.getClass().getSimpleName(), e.getMessage())));
+                errored = true;
+                store.Kill(id);
+                throw e;
             }
-            if (!IsFinished() && !IsSuspended()) Schedule();
-        } catch (Exception e) {
-            Logger.at(Level.INFO).log(String.format("Invocation %s terminated by %s: %s", id.toString(), e.getClass().getSimpleName(), e.getMessage()));
-            var player = Universe.get().getPlayer(store.GetOwner());
-            if (player != null) player.sendMessage(Message.raw(String.format("An invocation failed with %s: %s", e.getClass().getSimpleName(), e.getMessage())));
-            errored = true;
-            store.Kill(id);
-            throw e;
         }
     }
 
-    private void TryAttachDefinitionComponent() {
-        if (caster == null || !caster.isValid()) return;
-        var store = caster.getStore();
-        var defComp = store.getComponent(caster, Compumancy.Get().GetDefinitionStoreComponentType());
-        if (defComp != null) {
+    public boolean IsDefinitionStoreAttached() { return definitionsAttached; }
+    public void AttachDefinitionStore(IDefinitionStore defStore) {
+        if (defStore == null) {
+            definitionsAttached = false;
+            maxUserDefs = 0;
+            casterDefs = null;
+            fixedDefs = null;
+        } else {
             cachedDefFrames = new Object2ObjectOpenHashMap<>();
-            maxUserDefs = defComp.GetMaxUserDefs();
-            casterDefs = defComp.GetUserDefsMap();
-            String fixedVocabularyName = defComp.GetFixedVocabularyName();
+            maxUserDefs = defStore.GetMaxUserDefs();
+            casterDefs = defStore.GetUserDefsMap();
+            String fixedVocabularyName = defStore.GetFixedVocabularyName();
             if (fixedVocabularyName != null) {
                 fixedDefs = Vocabulary.GetVocabulary(fixedVocabularyName);
                 if (fixedDefs == null) Logger.at(Level.WARNING).log(String.format("The fixed vocabulary '%s' was not found", fixedVocabularyName));
@@ -242,7 +248,10 @@ public class Invocation implements Runnable {
     }
 
     public void ExecuteDefinition(String defName) {
-        if (!definitionsAttached) throw new DefinitionNotFoundException(String.format("The definition '%s' was not found", defName));
+        if (!definitionsAttached) {
+            PushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Execute, defName));
+            return;
+        }
         ExecutionFrame frame;
         Word def;
         if ((frame = cachedDefFrames.get(defName)) != null) {
@@ -260,8 +269,11 @@ public class Invocation implements Runnable {
         }
     }
 
-    public void AddDefinition(String defName, Word word) {
-        if (!definitionsAttached) throw new CompileException(String.format("Failed to save definition '%s', no definition store found", defName));
+    public void StoreDefinition(String defName, Word word) {
+        if (!definitionsAttached) {
+            PushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Store, defName, word));
+            return;
+        }
         if (fixedDefs != null && fixedDefs.Contains(defName)) {
             throw new InvalidOperationException(String.format("Attempted to override fixed definition '%s'", defName));
         }
@@ -271,7 +283,24 @@ public class Invocation implements Runnable {
         cachedDefFrames.remove(defName);
     }
 
-
+    public void LoadDefinition(String defName) {
+        if (!definitionsAttached) {
+            PushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Load, defName));
+            return;
+        }
+        Word def;
+        ArrayList<VMObject> list;
+        if (fixedDefs != null && (def = fixedDefs.Get(defName)) != null) {
+            list = new ArrayList<>();
+            def.AddContentsToList(list);
+        } else if (casterDefs != null && (def = casterDefs.get(defName)) != null) {
+            list = new ArrayList<>();
+            def.AddContentsToList(list);
+        } else {
+            throw new DefinitionNotFoundException(String.format("The definition '%s' was not found", defName));
+        }
+        Push(new ListObject(list, def.GetExecuteSync()));
+    }
 
 
 

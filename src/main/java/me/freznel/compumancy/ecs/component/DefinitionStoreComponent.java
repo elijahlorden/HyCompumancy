@@ -1,4 +1,4 @@
-package me.freznel.compumancy.casting;
+package me.freznel.compumancy.ecs.component;
 
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
@@ -7,13 +7,12 @@ import com.hypixel.hytale.codec.codecs.map.MapCodec;
 import com.hypixel.hytale.component.Component;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import me.freznel.compumancy.vm.compiler.Word;
-import me.freznel.compumancy.vm.execution.InvocationState;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DefinitionStoreComponent implements Component<EntityStore> {
+public class DefinitionStoreComponent implements Component<EntityStore>, IDefinitionStore {
     public static final BuilderCodec<DefinitionStoreComponent> CODEC = BuilderCodec.builder(DefinitionStoreComponent.class, DefinitionStoreComponent::new)
             .append(new KeyedCodec<>("Map", new MapCodec<>(Word.CODEC, HashMap::new)),
                     (o, v) -> {
