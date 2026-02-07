@@ -1,10 +1,5 @@
 package me.freznel.compumancy.vm.objects;
 
-import com.hypixel.hytale.codec.Codec;
-import com.hypixel.hytale.codec.KeyedCodec;
-import com.hypixel.hytale.codec.builder.BuilderCodec;
-import com.hypixel.hytale.codec.codecs.EnumCodec;
-import com.hypixel.hytale.codec.lookup.ObjectCodecMapCodec;
 import me.freznel.compumancy.codec.CustomMapCodec;
 import me.freznel.compumancy.vm.exceptions.CompileException;
 import me.freznel.compumancy.vm.exceptions.InvalidOperationException;
@@ -13,15 +8,13 @@ import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.execution.frame.DefBuilderFrame;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.interfaces.IExecutable;
-import me.freznel.compumancy.vm.operators.UnaryOperator;
-import me.freznel.compumancy.vm.operators.UnaryOperatorSet;
 
 public final class MetaObject extends VMObject implements IEvaluatable {
 
     public static final CustomMapCodec<MetaObject> CODEC = new CustomMapCodec<>(
             MetaObject.class,
             "Op",
-            (MetaObject obj) -> obj.GetOperation().toString(),
+            (MetaObject obj) -> obj.getOperation().toString(),
             (String opStr) -> {
                 if (opStr == null) return MetaOperation.Invalid.Instance;
                 try {
@@ -54,13 +47,13 @@ public final class MetaObject extends VMObject implements IEvaluatable {
     public MetaObject() { }
     public MetaObject(MetaOperation operation) { this.operation = operation; }
 
-    public MetaOperation GetOperation() { return operation; }
+    public MetaOperation getOperation() { return operation; }
 
     @Override
-    public String GetObjectName() { return "MetaOperation"; }
+    public String getObjectName() { return "MetaOperation"; }
 
     @Override
-    public int GetObjectSize() { return 1; }
+    public int getObjectSize() { return 1; }
 
     @Override
     public String toString() {
@@ -73,15 +66,15 @@ public final class MetaObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Evaluate(Invocation invocation) {
+    public void evaluate(Invocation invocation) {
         switch (operation) {
             case StartDef -> {
-                invocation.PushFrame(new DefBuilderFrame());
+                invocation.pushFrame(new DefBuilderFrame());
             }
 
             case EndDef -> throw new CompileException("Invalid end of definition marker encountered");
@@ -89,14 +82,14 @@ public final class MetaObject extends VMObject implements IEvaluatable {
             case EndList -> throw new CompileException("Invalid end of list marker encountered");
 
             case Eval -> {
-                if (invocation.OperandCount() == 0) throw new StackUnderflowException("eval expected at least 1 operand");
-                var a = invocation.Pop();
+                if (invocation.getOperandCount() == 0) throw new StackUnderflowException("eval expected at least 1 operand");
+                var a = invocation.pop();
                 if (a instanceof IExecutable executable) { //Look for IExecutable first
-                    executable.Execute(invocation);
+                    executable.execute(invocation);
                 } else if (a instanceof IEvaluatable evaluatable) { //Fall back to IEvaluatable
-                    evaluatable.Evaluate(invocation);
+                    evaluatable.evaluate(invocation);
                 } else {
-                    throw new InvalidOperationException(String.format("eval: Unable to evaluate %s", a.GetObjectName()));
+                    throw new InvalidOperationException(String.format("eval: Unable to evaluate %s", a.getObjectName()));
                 }
             }
 
@@ -105,7 +98,7 @@ public final class MetaObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
+    public boolean isEvalSynchronous() {
         return false;
     }
 }

@@ -4,13 +4,6 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
-import com.hypixel.hytale.codec.codecs.map.EnumMapCodec;
-import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.world.PlayerUtil;
-import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.execution.frame.Frame;
 import me.freznel.compumancy.vm.objects.VMObject;
 
@@ -34,11 +27,13 @@ public final class InvocationState implements Cloneable {
     private final ArrayList<Frame> frameStack;
     private UUID id;
     private int executionBudget;
+    private long lastRunTimestamp;
 
-    public ArrayList<VMObject> GetOperandStack() { return this.operandStack; }
-    public ArrayList<Frame> GetFrameStack() { return this.frameStack; }
-    public int GetExecutionBudget() { return this.executionBudget; }
-    public UUID GetId() { return this.id; }
+    public ArrayList<VMObject> getOperandStack() { return this.operandStack; }
+    public ArrayList<Frame> getFrameStack() { return this.frameStack; }
+    public int getExecutionBudget() { return this.executionBudget; }
+    public UUID getId() { return this.id; }
+    public long getLastRunTimestamp() { return this.lastRunTimestamp; }
 
     public InvocationState() {
         operandStack = new ArrayList<>();
@@ -46,16 +41,17 @@ public final class InvocationState implements Cloneable {
     }
 
     public InvocationState(Invocation invocation) {
-        var operands = invocation.GetOperandStack();
+        var operands = invocation.getOperandStack();
         operandStack = new ArrayList<>(operands.size());
         for (var operand : operands) operandStack.add(operand.clone());
 
-        var frames = invocation.GetFrameStack();
+        var frames = invocation.getFrameStack();
         frameStack = new ArrayList<>(frames.size());
         for (var frame : frames) frameStack.add(frame.clone());
 
-        executionBudget = invocation.GetExecutionBudget();
-        id = invocation.GetId();
+        executionBudget = invocation.getExecutionBudget();
+        id = invocation.getId();
+        lastRunTimestamp = invocation.getLastRunTimestamp();
     }
 
     @Override

@@ -9,17 +9,17 @@ import me.freznel.compumancy.vm.objects.Vector3Object;
 
 public class SpawnParticlesAction extends VMAction {
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 50;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        if (invocation.OperandCount() < 1) throw new StackUnderflowException("spawn-particle: Expected at least 1 operand");
-        var a = invocation.Pop();
-        if (!(a instanceof Vector3Object vec)) throw new InvalidOperationException(String.format("spawn-particle: Expected Vector3, got %s", a.GetObjectName()));
-        invocation.AssertInAmbit(vec.GetX(), vec.GetY(), vec.GetZ());
+    public void execute(Invocation invocation) {
+        if (invocation.getOperandCount() < 1) throw new StackUnderflowException("spawn-particle: Expected at least 1 operand");
+        var a = invocation.pop();
+        if (!(a instanceof Vector3Object vec)) throw new InvalidOperationException(String.format("spawn-particle: Expected Vector3, got %s", a.getObjectName()));
+        invocation.assertInAmbit(vec.getX(), vec.getY(), vec.getZ());
 
-        ParticleUtil.spawnParticleEffect("Block_Land_Soft_Crystal", vec.GetVector3d(), invocation.GetWorld().getEntityStore().getStore());
+        ParticleUtil.spawnParticleEffect("Block_Land_Soft_Crystal", vec.getVector3d(), invocation.getWorld().getEntityStore().getStore());
     }
 }

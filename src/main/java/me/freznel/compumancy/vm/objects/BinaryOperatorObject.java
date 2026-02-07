@@ -1,8 +1,5 @@
 package me.freznel.compumancy.vm.objects;
 
-import com.hypixel.hytale.codec.KeyedCodec;
-import com.hypixel.hytale.codec.builder.BuilderCodec;
-import com.hypixel.hytale.codec.codecs.EnumCodec;
 import me.freznel.compumancy.codec.CustomMapCodec;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.StackUnderflowException;
@@ -15,7 +12,7 @@ public final class BinaryOperatorObject extends VMObject implements IEvaluatable
     public static final CustomMapCodec<BinaryOperatorObject> CODEC = new CustomMapCodec<>(
             BinaryOperatorObject.class,
             "Op",
-            (BinaryOperatorObject obj) -> obj.GetOperator().toString(),
+            (BinaryOperatorObject obj) -> obj.getOperator().toString(),
             (String opStr) -> {
                 if (opStr == null) return BinaryOperator.Invalid.Instance;
                 try {
@@ -35,13 +32,13 @@ public final class BinaryOperatorObject extends VMObject implements IEvaluatable
 
     public BinaryOperatorObject(BinaryOperator operator) { this.operator = operator; }
 
-    public BinaryOperator GetOperator() { return operator; }
+    public BinaryOperator getOperator() { return operator; }
 
     @Override
-    public String GetObjectName() { return "BinaryOperator"; }
+    public String getObjectName() { return "BinaryOperator"; }
 
     @Override
-    public int GetObjectSize() { return 1; }
+    public int getObjectSize() { return 1; }
 
     @Override
     public String toString() {
@@ -54,20 +51,20 @@ public final class BinaryOperatorObject extends VMObject implements IEvaluatable
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Evaluate(Invocation invocation) {
-        if (invocation.OperandCount() < 2) throw new StackUnderflowException(operator.toString() + " operator expected at least 2 operands");
-        VMObject b = invocation.Pop();
-        VMObject a = invocation.Pop();
-        invocation.Push(BinaryOperatorSet.Operate(operator, a, b));
+    public void evaluate(Invocation invocation) {
+        if (invocation.getOperandCount() < 2) throw new StackUnderflowException(operator.toString() + " operator expected at least 2 operands");
+        VMObject b = invocation.pop();
+        VMObject a = invocation.pop();
+        invocation.push(BinaryOperatorSet.Operate(operator, a, b));
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
+    public boolean isEvalSynchronous() {
         return false;
     }
 }

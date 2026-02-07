@@ -8,8 +8,8 @@ import me.freznel.compumancy.vm.exceptions.VMException;
  */
 public interface IEvaluatable {
 
-    public int ExecutionBudgetCost();
-    public void Evaluate(Invocation invocation) throws VMException;
-    public boolean IsEvalSynchronous();
+    public int executionBudgetCost();
+    public void evaluate(Invocation invocation) throws VMException;
+    public boolean isEvalSynchronous();
 
 }

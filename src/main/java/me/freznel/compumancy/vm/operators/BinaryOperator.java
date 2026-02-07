@@ -24,7 +24,7 @@ public enum BinaryOperator {
 
     public static final BinaryOperator[] Values = BinaryOperator.values();
 
-    public static BinaryOperator FromInt(int i)
+    public static BinaryOperator fromInt(int i)
     {
         if (i < 0 || i > Values.length - 1) return Invalid;
         return Values[i];
@@ -36,16 +36,16 @@ public enum BinaryOperator {
         Instance = new BinaryOperatorObject(this);
     }
 
-    public <T extends VMObject, K extends VMObject> VMObject StandardException(String s, T left, K right) { throw new InvalidOperationException(String.format("Attempted to %s %s and %s", s, left.GetObjectName(), right.GetObjectName())); }
-    public <T extends VMObject, K extends VMObject> VMObject CompareException(T left, K right) { throw new InvalidOperationException(String.format("Attempted to compare %s and %s", left.GetObjectName(), right.GetObjectName())); }
+    public <T extends VMObject, K extends VMObject> VMObject standardException(String s, T left, K right) { throw new InvalidOperationException(String.format("Attempted to %s %s and %s", s, left.getObjectName(), right.getObjectName())); }
+    public <T extends VMObject, K extends VMObject> VMObject compareException(T left, K right) { throw new InvalidOperationException(String.format("Attempted to compare %s and %s", left.getObjectName(), right.getObjectName())); }
 
     @SuppressWarnings("UnusedReturnValue")
-    public <T extends VMObject, K extends VMObject> VMObject ThrowInvalidOperation(T left, K right)
+    public <T extends VMObject, K extends VMObject> VMObject throwInvalidOperation(T left, K right)
     {
         return switch (this) {
             case Invalid -> throw new InvalidOperationException("Encountered an invalid operator");
-            case Equal, NotEqual, GreaterThan, LessThan, GreaterThanOrEqualTo, LessThanOrEqualTo -> CompareException(left, right);
-            default -> StandardException(this.toString(), left, right);
+            case Equal, NotEqual, GreaterThan, LessThan, GreaterThanOrEqualTo, LessThanOrEqualTo -> compareException(left, right);
+            default -> standardException(this.toString(), left, right);
         };
     }
 

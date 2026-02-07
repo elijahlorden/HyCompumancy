@@ -50,15 +50,15 @@ public class DefBuilderFrame extends Frame {
     }
 
     @Override
-    public int GetSize() { return size; }
+    public int getSize() { return size; }
 
     @Override
-    public boolean IsFinished() { return done; }
+    public boolean isFinished() { return done; }
 
     @Override
-    public void Execute(Invocation invocation, long interruptAt) {
+    public void execute(Invocation invocation, long interruptAt) {
         if (done) return;
-        var frameStack = invocation.GetFrameStack();
+        var frameStack = invocation.getFrameStack();
         if (frameStack.getLast() != this) throw new CompileException("Unknown error, definition builder frame not on top");
         if (frameStack.size() < 2) throw new CompileException("Definition failed, no execution frame found");
         var frame = frameStack.get(frameStack.size() - 2);
@@ -66,45 +66,45 @@ public class DefBuilderFrame extends Frame {
 
         VMObject obj;
         if (key == null) {
-            if (exeFrame.IsFinished()) throw new CompileException("Failed to start definition, no DefinitionRef");
-            obj = exeFrame.Pop();
+            if (exeFrame.isFinished()) throw new CompileException("Failed to start definition, no DefinitionRef");
+            obj = exeFrame.pop();
             if (!(obj instanceof DefinitionRefObject defDef)) {
-                throw new CompileException(String.format("Expected DefinitionRef, got %s", obj.GetObjectName()));
+                throw new CompileException(String.format("Expected DefinitionRef, got %s", obj.getObjectName()));
             }
             key = defDef.GetDefName();
             if (key == null || key.trim().isEmpty()) throw new CompileException("Failed to start definition, DefinitionRef was empty");
         }
 
-        if (exeFrame.IsFinished()) throw new CompileException("Failed to start definition, no body after DefinitionRef");
+        if (exeFrame.isFinished()) throw new CompileException("Failed to start definition, no body after DefinitionRef");
 
         int count = 0;
         int balance = 0; //Track inner start/end def markers.  Only end the definition if a balanced end marker is encountered.
         while (count++ < 50) {
-            if (exeFrame.IsFinished()) throw new CompileException(String.format("Failed to complete definition '%s', end of frame", key));
-            obj = exeFrame.Pop();
+            if (exeFrame.isFinished()) throw new CompileException(String.format("Failed to complete definition '%s', end of frame", key));
+            obj = exeFrame.pop();
             if (obj instanceof MetaObject meta) {
-                var op = meta.GetOperation();
+                var op = meta.getOperation();
                 if (op == MetaObject.MetaOperation.StartDef) {
                     balance++;
                 } else if (op == MetaObject.MetaOperation.EndDef) {
                     if (balance > 0) balance--;
                     else {
-                        invocation.StoreDefinition(key, new Word(contents, evalSync));
-                        invocation.SetCurrentExecutionBudget(0);
+                        invocation.storeDefinition(key, new Word(contents, evalSync));
+                        invocation.setCurrentExecutionBudget(0);
                         done = true;
                         return;
                     }
                 }
             }
-            size += obj.GetObjectSize();
+            size += obj.getObjectSize();
             if (size > 1024) throw new CompileException(String.format("Definition '%s' exceeded maximum size of 1024", key));
             contents.addLast(obj.clone());
-            if (obj instanceof IEvaluatable eval) evalSync |= eval.IsEvalSynchronous();
+            if (obj instanceof IEvaluatable eval) evalSync |= eval.isEvalSynchronous();
         }
     }
 
     @Override
-    public FrameSyncType GetFrameSyncType() { return FrameSyncType.Async; }
+    public FrameSyncType getFrameSyncType() { return FrameSyncType.Async; }
 
     @Override
     public Frame clone() { return new DefBuilderFrame(this); }

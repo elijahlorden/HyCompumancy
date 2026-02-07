@@ -7,16 +7,16 @@ import me.freznel.compumancy.vm.execution.Invocation;
 public class SwapAction extends VMAction {
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        if (invocation.OperandCount() < 2) throw new StackUnderflowException("swap expected at least 2 operand");
-        var b = invocation.Pop();
-        var a = invocation.Pop();
-        invocation.Push(b);
-        invocation.Push(a);
+    public void execute(Invocation invocation) {
+        if (invocation.getOperandCount() < 2) throw new StackUnderflowException("swap expected at least 2 operand");
+        var b = invocation.pop();
+        var a = invocation.pop();
+        invocation.push(b);
+        invocation.push(a);
     }
 }

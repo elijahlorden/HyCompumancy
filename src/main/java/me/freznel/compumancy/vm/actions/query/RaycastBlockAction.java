@@ -12,28 +12,28 @@ import me.freznel.compumancy.vm.objects.Vector3Object;
 public class RaycastBlockAction extends VMAction {
 
     @Override
-    public boolean ExecuteSynchronous() {
+    public boolean isExecuteSynchronous() {
         return true;
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 100;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        if (invocation.OperandCount() < 2) throw new StackUnderflowException("raycast-block: Expected at least 2 operands");
-        var b = invocation.Pop(); //Rotation Vector3
-        var a = invocation.Pop(); //Position Vector3
-        if (!(a instanceof Vector3Object posObj) || !(b instanceof Vector3Object rotObj)) throw new InvalidOperationException(String.format("raycast-block: expected Vector3 Vector3, got %s %s", a.GetObjectName(), b.GetObjectName()));
-        double x = posObj.GetX(), y = posObj.GetY(), z = posObj.GetZ();
-        invocation.AssertInAmbit(x, y, z);
+    public void execute(Invocation invocation) {
+        if (invocation.getOperandCount() < 2) throw new StackUnderflowException("raycast-block: Expected at least 2 operands");
+        var b = invocation.pop(); //Rotation Vector3
+        var a = invocation.pop(); //Position Vector3
+        if (!(a instanceof Vector3Object posObj) || !(b instanceof Vector3Object rotObj)) throw new InvalidOperationException(String.format("raycast-block: expected Vector3 Vector3, got %s %s", a.getObjectName(), b.getObjectName()));
+        double x = posObj.getX(), y = posObj.getY(), z = posObj.getZ();
+        invocation.assertInAmbit(x, y, z);
 
-        var result = TargetUtil.getTargetBlock(invocation.GetWorld(), (id, fluidId) -> {
+        var result = TargetUtil.getTargetBlock(invocation.getWorld(), (id, fluidId) -> {
             return id != 0;
-        }, x, y, z, rotObj.GetX(), rotObj.GetY(), rotObj.GetZ(), 16);
+        }, x, y, z, rotObj.getX(), rotObj.getY(), rotObj.getZ(), 16);
 
-        invocation.Push(result == null ? NullObject.NULL : new Vector3Object(result.x, result.y, result.z));
+        invocation.push(result == null ? NullObject.NULL : new Vector3Object(result.x, result.y, result.z));
     }
 }

@@ -1,6 +1,5 @@
 package me.freznel.compumancy.vm.compiler;
 
-import com.hypixel.hytale.math.vector.Vector3d;
 import me.freznel.compumancy.vm.exceptions.ParseException;
 import me.freznel.compumancy.vm.objects.Vector3Object;
 
@@ -32,7 +31,7 @@ public class Tokenizer {
         queue = new ArrayDeque<>();
     }
 
-    public boolean HasNext() {
+    public boolean hasNext() {
         if (!queue.isEmpty()) return true;
         var tkn = readNextToken();
         if (tkn == null) return false;
@@ -40,12 +39,12 @@ public class Tokenizer {
         return true;
     }
 
-    public Token Next() {
+    public Token next() {
         if (!queue.isEmpty()) return queue.remove();
         return readNextToken();
     }
 
-    public Token Peek() {
+    public Token peek() {
         if (!queue.isEmpty()) return queue.peek();
         var tkn = readNextToken();
         if (tkn == null) return null;
@@ -53,7 +52,7 @@ public class Tokenizer {
         return tkn;
     }
 
-    public Token Peek(int depth) {
+    public Token peek(int depth) {
         while (depth >= queue.size()) {
             var tkn = readNextToken();
             if (tkn == null) break;
@@ -65,7 +64,7 @@ public class Tokenizer {
         return iterator.hasNext() ? iterator.next() : null;
     }
 
-    private void ReadWhitespace() {
+    private void readWhitespace() {
         char c;
         while (index < parseString.length() && Character.isWhitespace(c = parseString.charAt(index))) {
             if (c == '\n') line++;
@@ -147,7 +146,7 @@ public class Tokenizer {
         boolean ended = false;
 
         while (index < parseString.length()) {
-            ReadWhitespace();
+            readWhitespace();
             c = parseString.charAt(index++);
             if (c == VEC_END) { ended = true; break; }
             if (c == ',') continue; //Commas are optional.  <a b c> and <a, b, c> and <a,b,c> are all valid
@@ -167,7 +166,7 @@ public class Tokenizer {
     }
 
     private Token readNextToken() {
-        ReadWhitespace();
+        readWhitespace();
         if (index >= parseString.length()) return null;
         int startLine = line;
         char nextChar = parseString.charAt(index++);

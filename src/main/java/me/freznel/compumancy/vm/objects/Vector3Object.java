@@ -36,27 +36,27 @@ public final class Vector3Object extends VMObject implements IEvaluatable {
         this.z = other.z;
     }
 
-    public Vector3d GetVector3d() { return new Vector3d(x, y, z); }
+    public Vector3d getVector3d() { return new Vector3d(x, y, z); }
 
-    public double GetX() {
+    public double getX() {
         return x;
     }
 
-    public double GetY() {
+    public double getY() {
         return y;
     }
 
-    public double GetZ() {
+    public double getZ() {
         return z;
     }
 
     @Override
-    public String GetObjectName() {
+    public String getObjectName() {
         return "Vector3";
     }
 
     @Override
-    public int GetObjectSize() {
+    public int getObjectSize() {
         return 3;
     }
 
@@ -71,47 +71,47 @@ public final class Vector3Object extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Evaluate(Invocation invocation) throws VMException {
-        invocation.Push(this); //Immutable object
+    public void evaluate(Invocation invocation) throws VMException {
+        invocation.push(this); //Immutable object
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
+    public boolean isEvalSynchronous() {
         return false;
     }
 
     //Vector math
 
-    public boolean Equal(Vector3Object other) { return x == other.x && y == other.y && z == other.z; }
+    public boolean equal(Vector3Object other) { return x == other.x && y == other.y && z == other.z; }
 
     @Nonnull
-    public Vector3Object Normalize() {
-        double length = this.Length();
+    public Vector3Object normalize() {
+        double length = this.length();
         return new Vector3Object(x / length, y / length, z / length);
     }
 
-    public double Length() {
+    public double length() {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
-    public double SquaredLength() {
+    public double squaredLength() {
         return x * x + y * y + z * z;
     }
 
     @Nonnull
-    public Vector3Object SetLength(double newLen) {
-        double factor = newLen / this.Length();
+    public Vector3Object setLength(double newLen) {
+        double factor = newLen / this.length();
         return new Vector3Object(x * factor, y * factor, z * factor);
     }
 
-    public Vector3Object Negate() { return new Vector3Object(-x, -y, -z); }
+    public Vector3Object negate() { return new Vector3Object(-x, -y, -z); }
 
-    public double Dot(Vector3Object other) {
+    public double dot(Vector3Object other) {
         return x * other.x + y * other.y + z * other.z;
     }
 
@@ -119,12 +119,12 @@ public final class Vector3Object extends VMObject implements IEvaluatable {
         return new Vector3Object(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x);
     }
 
-    public Vector3Object Add(Vector3Object other) { return new Vector3Object(x + other.x, y + other.y, z + other.z); }
-    public Vector3Object Subtract(Vector3Object other) { return new Vector3Object(x - other.x, y - other.y, z - other.z); }
-    public Vector3Object Multiply(double d) { return new Vector3Object(x * d, y * d, z * d); }
-    public Vector3Object Divide(double d) { return new Vector3Object(x / d, y / d, z / d); }
+    public Vector3Object add(Vector3Object other) { return new Vector3Object(x + other.x, y + other.y, z + other.z); }
+    public Vector3Object subtract(Vector3Object other) { return new Vector3Object(x - other.x, y - other.y, z - other.z); }
+    public Vector3Object multiply(double d) { return new Vector3Object(x * d, y * d, z * d); }
+    public Vector3Object divide(double d) { return new Vector3Object(x / d, y / d, z / d); }
 
-    public Vector3Object RotateByAxisAngle(double u, double v, double w, double theta) {
+    public Vector3Object rotateByAxisAngle(double u, double v, double w, double theta) {
         double cosTheta = Math.cos(theta);
         double sinTheta = Math.sin(theta);
         return new Vector3Object(
@@ -134,9 +134,9 @@ public final class Vector3Object extends VMObject implements IEvaluatable {
         );
     }
 
-    public Vector3Object ProjectToPlane(Vector3Object normal) {
-        var proj = normal.Multiply(this.Dot(normal) / normal.Dot(normal));
-        return Subtract(proj);
+    public Vector3Object projectToPlane(Vector3Object normal) {
+        var proj = normal.multiply(this.dot(normal) / normal.dot(normal));
+        return subtract(proj);
     }
 
 

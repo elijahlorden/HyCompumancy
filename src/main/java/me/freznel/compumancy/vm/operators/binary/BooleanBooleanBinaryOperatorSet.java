@@ -7,7 +7,7 @@ import me.freznel.compumancy.vm.operators.BinaryOperatorSet;
 
 public class BooleanBooleanBinaryOperatorSet extends BinaryOperatorSet<BoolObject, BoolObject> {
 
-    private static double ToDouble(BoolObject o) { return o.GetValue() ? 1 : 0; }
+    private static double ToDouble(BoolObject o) { return o.getValue() ? 1 : 0; }
 
     @Override
     public VMObject Add(BoolObject a, BoolObject b) {
@@ -23,25 +23,25 @@ public class BooleanBooleanBinaryOperatorSet extends BinaryOperatorSet<BoolObjec
     }
 
     @Override
-    public VMObject And(BoolObject a, BoolObject b) { return (a.GetValue() && b.GetValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject And(BoolObject a, BoolObject b) { return (a.getValue() && b.getValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject Nand(BoolObject a, BoolObject b) { return !(a.GetValue() && b.GetValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject Nand(BoolObject a, BoolObject b) { return !(a.getValue() && b.getValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject Or(BoolObject a, BoolObject b) { return (a.GetValue() || b.GetValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject Or(BoolObject a, BoolObject b) { return (a.getValue() || b.getValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject Xor(BoolObject a, BoolObject b) { return (a.GetValue() ^ b.GetValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject Xor(BoolObject a, BoolObject b) { return (a.getValue() ^ b.getValue()) ? BoolObject.TRUE : BoolObject.FALSE; }
 
     @Override
-    public VMObject Equal(BoolObject a, BoolObject b) { return a.GetValue() == b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject Equal(BoolObject a, BoolObject b) { return a.getValue() == b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject NotEqual(BoolObject a, BoolObject b) { return a.GetValue() != b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject NotEqual(BoolObject a, BoolObject b) { return a.getValue() != b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject GreaterThan(BoolObject a, BoolObject b) { return a.GetValue() && !b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject GreaterThan(BoolObject a, BoolObject b) { return a.getValue() && !b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject LessThan(BoolObject a, BoolObject b) { return !a.GetValue() && b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject LessThan(BoolObject a, BoolObject b) { return !a.getValue() && b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject GreaterThanOrEqualTo(BoolObject a, BoolObject b) { return a.GetValue() || b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject GreaterThanOrEqualTo(BoolObject a, BoolObject b) { return a.getValue() || b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject LessThanOrEqualTo(BoolObject a, BoolObject b) { return a.GetValue() || b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject LessThanOrEqualTo(BoolObject a, BoolObject b) { return a.getValue() || b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
 
 }

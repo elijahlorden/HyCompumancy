@@ -47,11 +47,11 @@ public class DefinitionStoreComponent implements Component<EntityStore>, IDefini
 
     public ConcurrentHashMap<String, Word> GetUserDefsMap() { return userDefs; }
 
-    public int GetMaxUserDefs() { return maxUserDefs; }
-    public void SetMaxUserDefs(int maxUserDefs) { this.maxUserDefs = maxUserDefs; }
+    public int getMaxUserDefs() { return maxUserDefs; }
+    public void setMaxUserDefs(int maxUserDefs) { this.maxUserDefs = maxUserDefs; }
 
-    public String GetFixedVocabularyName() { return fixedVocabularyName; }
-    public void SetFixedVocabularyName(String fixedVocabularyName) { this.fixedVocabularyName = fixedVocabularyName; }
+    public String getFixedVocabularyName() { return fixedVocabularyName; }
+    public void setFixedVocabularyName(String fixedVocabularyName) { this.fixedVocabularyName = fixedVocabularyName; }
 
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")

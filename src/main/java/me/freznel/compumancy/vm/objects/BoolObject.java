@@ -1,8 +1,5 @@
 package me.freznel.compumancy.vm.objects;
 
-import com.hypixel.hytale.codec.Codec;
-import com.hypixel.hytale.codec.KeyedCodec;
-import com.hypixel.hytale.codec.builder.BuilderCodec;
 import me.freznel.compumancy.codec.BoolMapCodec;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.execution.Invocation;
@@ -15,7 +12,7 @@ public final class BoolObject extends VMObject implements IEvaluatable {
     public static final BoolMapCodec<BoolObject> CODEC = new BoolMapCodec<>(
             BoolObject.class,
             "Value",
-            BoolObject::GetValue,
+            BoolObject::getValue,
             v -> v ? TRUE : FALSE
     );
 
@@ -25,18 +22,18 @@ public final class BoolObject extends VMObject implements IEvaluatable {
         this.value = value;
     }
 
-    public boolean GetValue()
+    public boolean getValue()
     {
         return value;
     }
 
     @Override
-    public String GetObjectName() {
+    public String getObjectName() {
         return "Boolean";
     }
 
     @Override
-    public int GetObjectSize() { return 1; }
+    public int getObjectSize() { return 1; }
 
     @Override
     public String toString()
@@ -50,17 +47,17 @@ public final class BoolObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Evaluate(Invocation invocation) throws VMException {
-        invocation.Push(this); //Immutable object
+    public void evaluate(Invocation invocation) throws VMException {
+        invocation.push(this); //Immutable object
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
+    public boolean isEvalSynchronous() {
         return false;
     }
 }

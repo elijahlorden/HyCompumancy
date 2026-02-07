@@ -8,11 +8,11 @@ import me.freznel.compumancy.vm.operators.UnaryOperatorSet;
 public class Vector3UnaryOperatorSet extends UnaryOperatorSet<Vector3Object> {
     @Override
     public VMObject Length(Vector3Object arg) {
-        return new NumberObject(arg.Length());
+        return new NumberObject(arg.length());
     }
 
     @Override
     public VMObject SignedNegate(Vector3Object arg) {
-        return arg.Negate();
+        return arg.negate();
     }
 }

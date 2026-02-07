@@ -8,7 +8,6 @@ import me.freznel.compumancy.vm.exceptions.InvalidActionException;
 import me.freznel.compumancy.vm.execution.FrameSyncType;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
-import me.freznel.compumancy.vm.objects.ListObject;
 import me.freznel.compumancy.vm.objects.VMObject;
 
 import java.util.ArrayList;
@@ -16,9 +15,9 @@ import java.util.Arrays;
 
 public class ExecutionFrame extends Frame {
     public static final BuilderCodec<ExecutionFrame> CODEC = BuilderCodec.builder(ExecutionFrame.class, ExecutionFrame::new)
-            .append(new KeyedCodec<>("List", new ArrayCodec<VMObject>(VMObject.CODEC, VMObject[]::new)), ExecutionFrame::SetContentsArray, ExecutionFrame::GetContentsArray)
+            .append(new KeyedCodec<>("List", new ArrayCodec<VMObject>(VMObject.CODEC, VMObject[]::new)), ExecutionFrame::setContentsArray, ExecutionFrame::getContentsArray)
             .add()
-            .append(new KeyedCodec<>("ExeSync", Codec.BOOLEAN), ExecutionFrame::SetExecuteSync, ExecutionFrame::GetExecuteSync)
+            .append(new KeyedCodec<>("ExeSync", Codec.BOOLEAN), ExecutionFrame::setExecuteSync, ExecutionFrame::isExecuteSync)
             .add()
             .build();
 
@@ -27,79 +26,79 @@ public class ExecutionFrame extends Frame {
     private boolean executeSync;
 
     public ExecutionFrame() { this.contents = new ArrayList<>(); index = 0; executeSync = false; }
-    public ExecutionFrame(ArrayList<VMObject> contents) { this.contents = contents; index = 0; CalcExecuteSync(); }
+    public ExecutionFrame(ArrayList<VMObject> contents) { this.contents = contents; index = 0; calcExecuteSync(); }
     public ExecutionFrame(ArrayList<VMObject> contents, boolean executeSync) { this.contents = contents; index = 0; this.executeSync = executeSync; }
     public ExecutionFrame(ExecutionFrame other) {
         this.contents = new ArrayList<>(other.contents.size() - other.index);
         for (int i=other.index; i < other.contents.size(); i++) {
             var obj = other.contents.get(i);
             this.contents.add(obj.clone());
-            executeSync |= (obj instanceof IEvaluatable eval && eval.IsEvalSynchronous());
+            executeSync |= (obj instanceof IEvaluatable eval && eval.isEvalSynchronous());
         }
         this.index = 0;
-        this.executeSync = other.GetExecuteSync();
+        this.executeSync = other.isExecuteSync();
     }
 
-    public VMObject Peek() { return (index < contents.size()) ? contents.get(index) : null; }
-    public VMObject Pop() { return (index < contents.size()) ? contents.get(index++) : null; }
+    public VMObject peek() { return (index < contents.size()) ? contents.get(index) : null; }
+    public VMObject pop() { return (index < contents.size()) ? contents.get(index++) : null; }
 
-    public VMObject[] GetContentsArray() {
-        if (IsFinished()) return new VMObject[0];
+    public VMObject[] getContentsArray() {
+        if (isFinished()) return new VMObject[0];
         return this.contents.subList(index, this.contents.size()).toArray(new VMObject[0]); //Return only the objects that haven't been executed yet
     }
 
-    public void SetContentsArray(VMObject[] contents) {
+    public void setContentsArray(VMObject[] contents) {
         this.contents = new ArrayList<>();
         this.contents.addAll(Arrays.asList(contents));
         index = 0;
     }
 
-    public void SetContents(ArrayList<VMObject> contents) {
+    public void setContents(ArrayList<VMObject> contents) {
         this.contents = contents;
         index = 0;
     }
 
     @Override
-    public int GetSize() {
+    public int getSize() {
         return Math.max(contents.size() - index, 0);
     }
 
-    public boolean GetExecuteSync() { return this.executeSync; }
-    public void SetExecuteSync(boolean executeSync) { this.executeSync = executeSync; }
+    public boolean isExecuteSync() { return this.executeSync; }
+    public void setExecuteSync(boolean executeSync) { this.executeSync = executeSync; }
 
-    public void CalcExecuteSync() {
+    public void calcExecuteSync() {
         for (int i=index; i<contents.size(); i++) {
             var obj = contents.get(i);
-            executeSync |= (obj instanceof IEvaluatable eval && eval.IsEvalSynchronous());
+            executeSync |= (obj instanceof IEvaluatable eval && eval.isEvalSynchronous());
             if (executeSync) break;
         }
     }
 
     @Override
-    public boolean IsFinished() { return contents.isEmpty() || index >= contents.size(); }
+    public boolean isFinished() { return contents.isEmpty() || index >= contents.size(); }
 
     @Override
-    public void Execute(Invocation invocation, long interruptAt)
+    public void execute(Invocation invocation, long interruptAt)
     {
-        if (IsFinished()) return;
-        int budget = invocation.GetCurrentExecutionBudget();
-        boolean executingSync = invocation.IsRunningSync();
+        if (isFinished()) return;
+        int budget = invocation.getCurrentExecutionBudget();
+        boolean executingSync = invocation.isRunningSync();
         do {
             VMObject next = contents.get(index);
-            if (!(next instanceof IEvaluatable evaluatableNext)) throw new InvalidActionException("Attempted to execute a " + next.GetObjectName());
-            if (!executingSync && evaluatableNext.IsEvalSynchronous()) { executeSync = true; break; } //Stop if the next word requires sync and not currently sync
-            budget -= evaluatableNext.ExecutionBudgetCost();
+            if (!(next instanceof IEvaluatable evaluatableNext)) throw new InvalidActionException("Attempted to execute a " + next.getObjectName());
+            if (!executingSync && evaluatableNext.isEvalSynchronous()) { executeSync = true; break; } //Stop if the next word requires sync and not currently sync
+            budget -= evaluatableNext.executionBudgetCost();
             index++;
-            evaluatableNext.Evaluate(invocation);
-        } while (invocation.GetCurrentFrame() == this && budget > 0 && index < contents.size() &&!invocation.IsSuspended()); //Execute until another frame is pushed or the budget runs out
-        invocation.SetCurrentExecutionBudget(budget);
+            evaluatableNext.evaluate(invocation);
+        } while (invocation.getCurrentFrame() == this && budget > 0 && index < contents.size() &&!invocation.isSuspended()); //Execute until another frame is pushed or the budget runs out
+        invocation.setCurrentExecutionBudget(budget);
     }
 
     @Override
-    public FrameSyncType GetFrameSyncType() {
-        if (IsFinished()) return FrameSyncType.Neutral;
+    public FrameSyncType getFrameSyncType() {
+        if (isFinished()) return FrameSyncType.Neutral;
         if (executeSync) return FrameSyncType.Sync;
-        if (GetSize() > 10) return FrameSyncType.Async; //Only force a thread change for large frames
+        if (getSize() > 10) return FrameSyncType.Async; //Only force a thread change for large frames
         return FrameSyncType.Neutral;
     }
 
@@ -109,10 +108,10 @@ public class ExecutionFrame extends Frame {
     }
 
     //Create a full copy of the frame regardless of current index
-    public ExecutionFrame CopyFull() {
+    public ExecutionFrame copyFull() {
         var newFrame = new ExecutionFrame();
-        newFrame.SetContents(this.contents);
-        newFrame.SetExecuteSync(this.executeSync);
+        newFrame.setContents(this.contents);
+        newFrame.setExecuteSync(this.executeSync);
         return newFrame;
     }
 }

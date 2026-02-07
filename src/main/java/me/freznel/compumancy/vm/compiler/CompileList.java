@@ -6,10 +6,10 @@ import java.util.ArrayList;
 
 public class CompileList extends ArrayList<VMObject> {
 
-    public int StartLine;
-    public boolean ExecuteSync;
+    public int startLine;
+    public boolean executeSync;
 
     public CompileList() { super(); }
-    public CompileList(int line) { super(); StartLine = line; }
+    public CompileList(int line) { super(); startLine = line; }
 
 }

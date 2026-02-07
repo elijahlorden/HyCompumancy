@@ -35,12 +35,12 @@ public class InvocationComponent implements Component<EntityStore> {
         invocations.addAll(other.invocations);
     }
 
-    public void Remove(UUID id) { invocations.remove(id); }
-    public void Add(UUID id) { invocations.add(id); }
-    public boolean Contains(UUID id) { return invocations.contains(id); }
+    public void remove(UUID id) { invocations.remove(id); }
+    public void add(UUID id) { invocations.add(id); }
+    public boolean contains(UUID id) { return invocations.contains(id); }
 
-    public UUID GetOwner() { return owner; }
-    public void SetOwner(UUID owner) { this.owner = owner; }
+    public UUID getOwner() { return owner; }
+    public void setOwner(UUID owner) { this.owner = owner; }
 
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
@@ -55,7 +55,7 @@ public class InvocationComponent implements Component<EntityStore> {
         private static ComponentType<EntityStore, InvocationComponent> COMPONENT_TYPE;
 
         public InvocationComponentRefSystem() {
-            COMPONENT_TYPE = Compumancy.Get().GetInvocationComponentType();
+            COMPONENT_TYPE = Compumancy.get().getInvocationComponentType();
         }
 
         @Override
@@ -64,10 +64,10 @@ public class InvocationComponent implements Component<EntityStore> {
             if (comp == null || comp.invocations.isEmpty()) return;
             var set = comp.invocations;
             var world = store.getExternalData().getWorld();
-            InvocationStore.Get(comp.owner).thenAccept(invocationStore -> {
+            InvocationStore.get(comp.owner).thenAccept(invocationStore -> {
                 var failed = new ObjectLinkedOpenHashSet<UUID>();
                 for (UUID id : set) {
-                    if (!invocationStore.Resume(id, ref, world)) failed.add(id);
+                    if (!invocationStore.resume(id, ref, world)) failed.add(id);
                 }
                 if (!failed.isEmpty()) {
                     world.execute(() -> {
@@ -83,12 +83,12 @@ public class InvocationComponent implements Component<EntityStore> {
             if (comp == null || comp.invocations.isEmpty()) return;
             var set = comp.invocations;
             if (removeReason == RemoveReason.REMOVE) {
-                InvocationStore.Get(comp.owner).thenAccept(invocationStore -> {
-                    for (UUID id : set) invocationStore.Kill(id);
+                InvocationStore.get(comp.owner).thenAccept(invocationStore -> {
+                    for (UUID id : set) invocationStore.kill(id);
                 });
             } else if (removeReason == RemoveReason.UNLOAD) {
-                InvocationStore.Get(comp.owner).thenAccept(invocationStore -> {
-                    for (UUID id : set) invocationStore.Suspend(id);
+                InvocationStore.get(comp.owner).thenAccept(invocationStore -> {
+                    for (UUID id : set) invocationStore.suspend(id);
                 });
             }
         }

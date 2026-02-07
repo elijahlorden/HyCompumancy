@@ -7,10 +7,8 @@ import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
 import me.freznel.compumancy.vm.execution.frame.ExecutionFrame;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 import me.freznel.compumancy.vm.objects.VMObject;
-import org.bouncycastle.jcajce.provider.asymmetric.CONTEXT;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public final class Word implements Cloneable {
@@ -27,14 +25,14 @@ public final class Word implements Cloneable {
     public Word(VMObject o) {
         this.contents = new VMObject[1];
         contents[0] = o;
-        executeSync = (o instanceof IEvaluatable eval && eval.IsEvalSynchronous());
+        executeSync = (o instanceof IEvaluatable eval && eval.isEvalSynchronous());
     }
 
     public Word(VMObject... contents) {
         this.contents = contents;
         boolean sync = false;
         for (var obj : contents) {
-            sync = (obj instanceof IEvaluatable eval && eval.IsEvalSynchronous());
+            sync = (obj instanceof IEvaluatable eval && eval.isEvalSynchronous());
             if (sync) break;
         }
         executeSync = sync;
@@ -45,20 +43,20 @@ public final class Word implements Cloneable {
         this.contents = contents.toArray(new VMObject[0]);
     }
 
-    public int GetSize() { return this.contents.length; }
+    public int getSize() { return this.contents.length; }
 
-    public boolean GetExecuteSync() { return this.executeSync; }
+    public boolean isExecuteSync() { return this.executeSync; }
 
-    public void AddContentsToList(List<VMObject> list) {
+    public void addContentsToList(List<VMObject> list) {
         for (var obj : contents) {
             list.add(obj.clone());
         }
     }
 
-    public ExecutionFrame ToExecutionFrame() {
+    public ExecutionFrame toExecutionFrame() {
         var frame = new ExecutionFrame();
-        frame.SetContentsArray(this.contents);
-        frame.SetExecuteSync(this.executeSync);
+        frame.setContentsArray(this.contents);
+        frame.setExecuteSync(this.executeSync);
         return frame;
     }
 

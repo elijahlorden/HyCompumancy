@@ -12,15 +12,15 @@ import me.freznel.compumancy.vm.objects.VMObject;
 
 public class NumericIteratorFrame extends IteratorFrame {
     public static final BuilderCodec<NumericIteratorFrame> CODEC = BuilderCodec.builder(NumericIteratorFrame.class, NumericIteratorFrame::new)
-            .append(new KeyedCodec<>("Eval", VMObject.CODEC), NumericIteratorFrame::SetEvaluatable, NumericIteratorFrame::GetEvaluatable)
+            .append(new KeyedCodec<>("Eval", VMObject.CODEC), NumericIteratorFrame::setEvaluatable, NumericIteratorFrame::getEvaluatable)
             .add()
-            .append(new KeyedCodec<>("Start", Codec.INTEGER), NumericIteratorFrame::SetStart, NumericIteratorFrame::GetStart)
+            .append(new KeyedCodec<>("Start", Codec.INTEGER), NumericIteratorFrame::setStart, NumericIteratorFrame::getStart)
             .add()
-            .append(new KeyedCodec<>("End", Codec.INTEGER), NumericIteratorFrame::SetEnd, NumericIteratorFrame::GetEnd)
+            .append(new KeyedCodec<>("End", Codec.INTEGER), NumericIteratorFrame::getEnd, NumericIteratorFrame::getEnd)
             .add()
-            .append(new KeyedCodec<>("Inc", Codec.INTEGER), NumericIteratorFrame::SetIncrement, NumericIteratorFrame::GetIncrement)
+            .append(new KeyedCodec<>("Inc", Codec.INTEGER), NumericIteratorFrame::setIncrement, NumericIteratorFrame::getIncrement)
             .add()
-            .append(new KeyedCodec<>("Current", Codec.INTEGER), NumericIteratorFrame::SetCurrent, NumericIteratorFrame::GetCurrent)
+            .append(new KeyedCodec<>("Current", Codec.INTEGER), NumericIteratorFrame::setCurrent, NumericIteratorFrame::getCurrent)
             .add()
             .build();
 
@@ -46,46 +46,46 @@ public class NumericIteratorFrame extends IteratorFrame {
         this.evaluatable = other.evaluatable.clone();
     }
 
-    public VMObject GetEvaluatable() { return evaluatable; }
-    public void SetEvaluatable(VMObject evaluatable) { this.evaluatable = evaluatable; }
+    public VMObject getEvaluatable() { return evaluatable; }
+    public void setEvaluatable(VMObject evaluatable) { this.evaluatable = evaluatable; }
 
-    public int GetStart() { return start; }
-    public void SetStart(int start) { this.start = start; }
+    public int getStart() { return start; }
+    public void setStart(int start) { this.start = start; }
 
-    public int GetEnd() { return end; }
-    public void SetEnd(int end) { this.end = end; }
+    public int getEnd() { return end; }
+    public void getEnd(int end) { this.end = end; }
 
-    public int GetIncrement() { return inc; }
-    public void SetIncrement(int inc) { this.inc = inc; }
+    public int getIncrement() { return inc; }
+    public void setIncrement(int inc) { this.inc = inc; }
 
-    public int GetCurrent() { return current; }
-    public void SetCurrent(int current) { this.current = current; }
+    public int getCurrent() { return current; }
+    public void setCurrent(int current) { this.current = current; }
 
     @Override
-    public int GetSize() {
-        return evaluatable.GetObjectSize();
+    public int getSize() {
+        return evaluatable.getObjectSize();
     }
 
     @Override
-    public boolean IsFinished() { return inc == 0 || ((inc > 0) ? current > end : current < end); }
+    public boolean isFinished() { return inc == 0 || ((inc > 0) ? current > end : current < end); }
 
     @Override
-    public void Execute(Invocation invocation, long interruptAt) {
-        if (IsFinished()) return;
+    public void execute(Invocation invocation, long interruptAt) {
+        if (isFinished()) return;
         if (evaluatable != null) {
-            invocation.Push(new NumberObject(current));
-            if (evaluatable instanceof IExecutable exe) exe.Execute(invocation);
-            else if (evaluatable instanceof IEvaluatable eval) eval.Evaluate(invocation);
+            invocation.push(new NumberObject(current));
+            if (evaluatable instanceof IExecutable exe) exe.execute(invocation);
+            else if (evaluatable instanceof IEvaluatable eval) eval.evaluate(invocation);
         }
         current += inc;
     }
 
     @Override
-    public FrameSyncType GetFrameSyncType() {
-        if (IsFinished()) return FrameSyncType.Neutral;
-        if (evaluatable instanceof IExecutable exe && exe.IsExecuteSynchronous()) return FrameSyncType.Sync;
-        if (evaluatable instanceof IEvaluatable eval && eval.IsEvalSynchronous()) return FrameSyncType.Sync;
-        int remaining = (Math.abs(end - start) + 1) * evaluatable.GetObjectSize();
+    public FrameSyncType getFrameSyncType() {
+        if (isFinished()) return FrameSyncType.Neutral;
+        if (evaluatable instanceof IExecutable exe && exe.isExecuteSynchronous()) return FrameSyncType.Sync;
+        if (evaluatable instanceof IEvaluatable eval && eval.isEvalSynchronous()) return FrameSyncType.Sync;
+        int remaining = (Math.abs(end - start) + 1) * evaluatable.getObjectSize();
         return (remaining > 10) ? FrameSyncType.Async : FrameSyncType.Neutral; //Only force a thread change for large frames
     }
 

@@ -26,7 +26,7 @@ public class UnaryOperatorSet<T extends VMObject> {
     public static <T extends VMObject> VMObject Operate(UnaryOperator operator, T arg) throws InvalidOperationException
     {
         var cls = arg.getClass();
-        if (!Sets.containsKey(cls)) operator.ThrowInvalidOperation(arg);
+        if (!Sets.containsKey(cls)) operator.throwInvalidOperation(arg);
 
         @SuppressWarnings("unchecked")
         UnaryOperatorSet<T> set = (UnaryOperatorSet<T>) Sets.get(cls);
@@ -40,7 +40,7 @@ public class UnaryOperatorSet<T extends VMObject> {
         };
     }
 
-    public VMObject Length(T arg) { UnaryOperator.Length.ThrowInvalidOperation(arg); return null; }
-    public VMObject SignedNegate(T arg) { UnaryOperator.SignedNegate.ThrowInvalidOperation(arg); return null; }
-    public VMObject UnsignedNegate(T arg) { UnaryOperator.UnsignedNegate.ThrowInvalidOperation(arg); return null; }
+    public VMObject Length(T arg) { UnaryOperator.Length.throwInvalidOperation(arg); return null; }
+    public VMObject SignedNegate(T arg) { UnaryOperator.SignedNegate.throwInvalidOperation(arg); return null; }
+    public VMObject UnsignedNegate(T arg) { UnaryOperator.UnsignedNegate.throwInvalidOperation(arg); return null; }
 }

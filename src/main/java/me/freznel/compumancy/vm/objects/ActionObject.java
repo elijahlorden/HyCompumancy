@@ -14,8 +14,8 @@ public final class ActionObject extends VMObject implements IEvaluatable {
     public static final CustomMapCodec<ActionObject> CODEC = new CustomMapCodec<>(
             ActionObject.class,
             "Ref",
-            ActionObject::GetActionName,
-            VMAction::GetObject
+            ActionObject::getActionName,
+            VMAction::getObject
     );
 
     /*public static final BuilderCodec<ActionObject> CODEC = BuilderCodec.builder(ActionObject.class, ActionObject::new)
@@ -31,17 +31,17 @@ public final class ActionObject extends VMObject implements IEvaluatable {
         this.actionName = actionName;
     }
 
-    public VMAction GetActionRef() { return ref; }
-    public String GetActionName() { return actionName; }
+    public VMAction getActionRef() { return ref; }
+    public String getActionName() { return actionName; }
 
     @Override
-    public String GetObjectName() { return "Action"; }
+    public String getObjectName() { return "Action"; }
 
     @Override
     public String toString() { return (actionName != null && !actionName.isEmpty()) ? "Action: " + actionName : "Action"; }
 
     @Override
-    public int GetObjectSize() { return 1; }
+    public int getObjectSize() { return 1; }
 
     @Override
     public VMObject clone() {
@@ -49,18 +49,18 @@ public final class ActionObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public int ExecutionBudgetCost() {
-        return ref == null ? 1 : ref.ExecutionBudgetCost();
+    public int executionBudgetCost() {
+        return ref == null ? 1 : ref.executionBudgetCost();
     }
 
     @Override
-    public void Evaluate(Invocation invocation) throws VMException {
+    public void evaluate(Invocation invocation) throws VMException {
         if (ref == null) throw new InvalidActionException(String.format("The action '%s' was not found", actionName));
-        ref.Execute(invocation);
+        ref.execute(invocation);
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
-        return ref != null && ref.ExecuteSynchronous();
+    public boolean isEvalSynchronous() {
+        return ref != null && ref.isExecuteSynchronous();
     }
 }

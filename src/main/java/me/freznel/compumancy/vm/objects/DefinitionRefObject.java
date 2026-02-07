@@ -22,12 +22,12 @@ public final class DefinitionRefObject extends VMObject implements IEvaluatable,
     public String GetDefName() { return def; }
 
     @Override
-    public String GetObjectName() {
+    public String getObjectName() {
         return "DefinitionRef";
     }
 
     @Override
-    public int GetObjectSize() {
+    public int getObjectSize() {
         return def == null ? 1 : 1 + (def.length() / 50);
     }
 
@@ -42,27 +42,27 @@ public final class DefinitionRefObject extends VMObject implements IEvaluatable,
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Execute(Invocation invocation) throws VMException {
-        invocation.ExecuteDefinition(def);
+    public void execute(Invocation invocation) throws VMException {
+        invocation.executeDefinition(def);
     }
 
     @Override
-    public boolean IsExecuteSynchronous() {
+    public boolean isExecuteSynchronous() {
         return false;
     }
 
     @Override
-    public void Evaluate(Invocation invocation) throws VMException {
-        invocation.ExecuteDefinition(def);
+    public void evaluate(Invocation invocation) throws VMException {
+        invocation.executeDefinition(def);
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
+    public boolean isEvalSynchronous() {
         return false;
     }
 }

@@ -9,22 +9,19 @@ import com.hypixel.hytale.server.core.modules.entity.component.DisplayNameCompon
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import me.freznel.compumancy.Compumancy;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
 
-import javax.xml.stream.events.EndElement;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 public class EntityRefObject extends VMObject implements IEvaluatable {
     public static final BuilderCodec<EntityRefObject> CODEC = BuilderCodec.builder(EntityRefObject.class, EntityRefObject::new)
-            .append(new KeyedCodec<>("World", Codec.UUID_BINARY), EntityRefObject::SetWorldId, EntityRefObject::GetWorldId)
+            .append(new KeyedCodec<>("World", Codec.UUID_BINARY), EntityRefObject::setWorldId, EntityRefObject::getWorldId)
             .add()
-            .append(new KeyedCodec<>("Ref", PersistentRef.CODEC), EntityRefObject::SetRef, EntityRefObject::GetRef)
+            .append(new KeyedCodec<>("Ref", PersistentRef.CODEC), EntityRefObject::setRef, EntityRefObject::getRef)
             .add()
             .build();
 
@@ -47,7 +44,7 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
         this.displayNameCacheInvalidOn = other.displayNameCacheInvalidOn;
     }
 
-    public World GetWorld() {
+    public World getWorld() {
         if (worldId == null) return null;
         if (world == null || !world.isAlive()) {
             world = Universe.get().getWorld(worldId);
@@ -56,8 +53,8 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
         return world;
     }
 
-    public Ref<EntityStore> GetEntity() {
-        if (GetWorld() == null || persistentRef == null || !persistentRef.isValid()) return null;
+    public Ref<EntityStore> getEntity() {
+        if (getWorld() == null || persistentRef == null || !persistentRef.isValid()) return null;
         if (ref == null || !ref.isValid()) {
             final var store = world.getEntityStore().getStore();
             if (store.isInThread()) {
@@ -70,13 +67,13 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
         return ref;
     }
 
-    public PersistentRef GetRef() { return this.persistentRef; }
-    public void SetRef(PersistentRef persistentRef) { this.persistentRef = persistentRef; world = null; ref = null; }
-    public UUID GetWorldId() { return this.worldId; }
-    public void SetWorldId(UUID worldId) { this.worldId = worldId; world = null; ref = null; }
+    public PersistentRef getRef() { return this.persistentRef; }
+    public void setRef(PersistentRef persistentRef) { this.persistentRef = persistentRef; world = null; ref = null; }
+    public UUID getWorldId() { return this.worldId; }
+    public void setWorldId(UUID worldId) { this.worldId = worldId; world = null; ref = null; }
 
-    public <T> T InvokeSafe(Supplier<T> supplier) {
-        if (GetWorld() == null) return null;
+    public <T> T invokeSafe(Supplier<T> supplier) {
+        if (getWorld() == null) return null;
         T result = null;
         if (world.isInThread()) {
             result = supplier.get();
@@ -86,8 +83,8 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
         return result;
     }
 
-    public void InvokeSafe(Runnable runnable) {
-        if (GetWorld() == null) return;
+    public void invokeSafe(Runnable runnable) {
+        if (getWorld() == null) return;
         if (world.isInThread()) {
             runnable.run();
         } else {
@@ -95,12 +92,12 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
         }
     }
 
-    public String GetDisplayName() {
+    public String getDisplayName() {
         if (displayNameCache != null && System.currentTimeMillis() < displayNameCacheInvalidOn) return displayNameCache;
-        var ref = GetEntity();
+        var ref = getEntity();
         if (ref == null) return "";
         var store = ref.getStore();
-        var result =  InvokeSafe(() -> {
+        var result =  invokeSafe(() -> {
             var c = store.getComponent(ref, DisplayNameComponent.getComponentType());
             if (c == null) return "";
             var msg = c.getDisplayName();
@@ -113,19 +110,19 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public String GetObjectName() {
+    public String getObjectName() {
         return "Entity";
     }
 
     @Override
     public String toString() {
-        String displayName = GetDisplayName();
+        String displayName = getDisplayName();
         if (displayName == null) return "Entity [Unnamed]";
         return String.format("Entity [%s]", displayName);
     }
 
     @Override
-    public int GetObjectSize() {
+    public int getObjectSize() {
         return 1;
     }
 
@@ -135,21 +132,21 @@ public class EntityRefObject extends VMObject implements IEvaluatable {
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 2;
     }
 
     @Override
-    public void Evaluate(Invocation invocation) throws VMException {
-        invocation.Push(new EntityRefObject(this));
+    public void evaluate(Invocation invocation) throws VMException {
+        invocation.push(new EntityRefObject(this));
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
+    public boolean isEvalSynchronous() {
         return false;
     }
 
-    public static EntityRefObject FromRef(Ref<EntityStore> ref) {
+    public static EntityRefObject fromRef(Ref<EntityStore> ref) {
         EntityRefObject obj = new EntityRefObject();
         obj.ref = ref;
         var store = ref.getStore();

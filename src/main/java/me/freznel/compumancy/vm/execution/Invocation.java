@@ -46,6 +46,7 @@ public class Invocation implements Runnable {
     private final AtomicBoolean suspended;
     private boolean errored;
     private boolean isRunningSync;
+    private long lastRunTimestamp;
 
     private boolean definitionsAttached;
     private Map<String, ExecutionFrame> cachedDefFrames;
@@ -84,67 +85,68 @@ public class Invocation implements Runnable {
         this.id = UUID.randomUUID();
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
-        PushFrame(new CompileFrame(compileString));
+        pushFrame(new CompileFrame(compileString));
     }
 
     public Invocation(World world, Ref<EntityStore> caster, InvocationState state, InvocationStore store) {
         this.caster = caster;
         this.world = world;
-        this.executionBudget = state.GetExecutionBudget();
-        this.operandStack = state.GetOperandStack();
-        this.frameStack = state.GetFrameStack();
-        this.id = state.GetId();
+        this.executionBudget = state.getExecutionBudget();
+        this.operandStack = state.getOperandStack();
+        this.frameStack = state.getFrameStack();
+        this.id = state.getId();
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
         this.store = store;
     }
 
-    public World GetWorld() { return world; }
-    public Ref<EntityStore> GetCaster() { return caster; }
-    public InvocationStore GetStore() { return store; }
+    public World getWorld() { return world; }
+    public Ref<EntityStore> getCaster() { return caster; }
+    public InvocationStore getStore() { return store; }
 
-    public void SetOperandStack(ArrayList<VMObject> operandStack) { this.operandStack = operandStack; }
-    public ArrayList<VMObject> GetOperandStack() { return this.operandStack; }
-    public void SetFrameStack (ArrayList<Frame> frameStack) { this.frameStack = frameStack; }
-    public ArrayList<Frame> GetFrameStack() { return this.frameStack; }
-    public void SetExecutionBudget(int executionBudget) { this.executionBudget = executionBudget; }
-    public int GetExecutionBudget() { return this.executionBudget; }
-    public void SetCurrentExecutionBudget(int currentExecutionBudget) { this.currentExecutionBudget = currentExecutionBudget; }
-    public int GetCurrentExecutionBudget() { return this.currentExecutionBudget; }
-    public UUID GetId() { return this.id; }
+    public void setOperandStack(ArrayList<VMObject> operandStack) { this.operandStack = operandStack; }
+    public ArrayList<VMObject> getOperandStack() { return this.operandStack; }
+    public void setFrameStack(ArrayList<Frame> frameStack) { this.frameStack = frameStack; }
+    public ArrayList<Frame> getFrameStack() { return this.frameStack; }
+    public void setExecutionBudget(int executionBudget) { this.executionBudget = executionBudget; }
+    public int getExecutionBudget() { return this.executionBudget; }
+    public void setCurrentExecutionBudget(int currentExecutionBudget) { this.currentExecutionBudget = currentExecutionBudget; }
+    public int getCurrentExecutionBudget() { return this.currentExecutionBudget; }
+    public UUID getId() { return this.id; }
+    public long getLastRunTimestamp() { return this.lastRunTimestamp; }
 
-    public Frame GetCurrentFrame() { return frameStack.isEmpty() ? null : frameStack.getLast(); }
-    public boolean IsFinished() { return frameStack.isEmpty(); }
-    public void PushFrame(Frame frame) {
-        while (!frameStack.isEmpty() && frameStack.getLast().IsFinished()) frameStack.removeLast();
+    public Frame getCurrentFrame() { return frameStack.isEmpty() ? null : frameStack.getLast(); }
+    public boolean isFinished() { return frameStack.isEmpty(); }
+    public void pushFrame(Frame frame) {
+        while (!frameStack.isEmpty() && frameStack.getLast().isFinished()) frameStack.removeLast();
         frameStack.addLast(frame);
         if (frameStack.size() > 128) throw new StackOverflowException("Maximum execution depth of 128 exceeded");
     }
-    public boolean IsRunningSync() { return this.isRunningSync; }
-    public boolean IsSuspended() { return this.suspended.get(); }
-    public void Suspend() { this.suspended.set(true); }
+    public boolean isRunningSync() { return this.isRunningSync; }
+    public boolean isSuspended() { return this.suspended.get(); }
+    public void suspend() { this.suspended.set(true); }
 
-    public int OperandCount() { return operandStack.size(); }
-    public VMObject Pop() { return operandStack.removeLast(); }
-    public void Push(VMObject o) {
+    public int getOperandCount() { return operandStack.size(); }
+    public VMObject pop() { return operandStack.removeLast(); }
+    public void push(VMObject o) {
         operandStack.addLast(o);
         if (operandStack.size() > 1024) throw new StackOverflowException("Maximum operand stack depth of 1024 exceeded");
     }
-    public VMObject Peek() { return operandStack.getLast(); }
-    public VMObject Peek(int depth) { return operandStack.get((operandStack.size() - 1) - depth); }
+    public VMObject peek() { return operandStack.getLast(); }
+    public VMObject peek(int depth) { return operandStack.get((operandStack.size() - 1) - depth); }
 
-    public void Step() {
+    public void step() {
         long interruptAt = System.nanoTime() + 1_000_000 * 5; //+5ms maximum
         currentExecutionBudget = executionBudget;
-        while (currentExecutionBudget > 0 && !frameStack.isEmpty() && System.nanoTime() < interruptAt && !IsSuspended()) {
+        while (currentExecutionBudget > 0 && !frameStack.isEmpty() && System.nanoTime() < interruptAt && !isSuspended()) {
             var frame = frameStack.getLast();
-            if (frame.IsFinished()) { frameStack.removeLast(); continue; }
-            if (IsWrongSync(frame.GetFrameSyncType())) break;
-            frame.Execute(this, interruptAt);
+            if (frame.isFinished()) { frameStack.removeLast(); continue; }
+            if (isWrongSync(frame.getFrameSyncType())) break;
+            frame.execute(this, interruptAt);
         }
     }
 
-    public boolean IsWrongSync(FrameSyncType syncType) {
+    public boolean isWrongSync(FrameSyncType syncType) {
         return ((syncType == FrameSyncType.Sync && !isRunningSync) || (syncType == FrameSyncType.Async && isRunningSync));
     }
 
@@ -168,40 +170,40 @@ public class Invocation implements Runnable {
         return true;
     }*/
 
-    private void ScheduleSync(int additionalDelay) {
-        Compumancy.Get().ScheduleDaemon(() -> {
+    private void scheduleSync(int additionalDelay) {
+        Compumancy.get().scheduleDaemon(() -> {
             world.execute(this);
-        }, Compumancy.Get().GetConfig().SyncStepDelay + additionalDelay);
+        }, Compumancy.get().getConfig().SyncStepDelay + additionalDelay);
     }
 
-    public boolean Schedule() {
-        if (errored || IsFinished()) return false;
+    public boolean schedule() {
+        if (errored || isFinished()) return false;
         var nextFrame = frameStack.getLast();
-        var syncType = nextFrame.GetFrameSyncType();
+        var syncType = nextFrame.getFrameSyncType();
         int additionalDelay = store.resumeDelay();
         if (syncType == FrameSyncType.Neutral) {
             if (isRunningSync) {
-                ScheduleSync(additionalDelay);
+                scheduleSync(additionalDelay);
             } else {
-                Compumancy.Get().ScheduleDaemon(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
+                Compumancy.get().scheduleDaemon(this, Compumancy.get().getConfig().AsyncStepDelay + additionalDelay);
             }
         } else if (syncType == FrameSyncType.Sync) {
             if (!isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to world thread", id.toString()));
             isRunningSync = true;
-            ScheduleSync(additionalDelay);
+            scheduleSync(additionalDelay);
         } else {
             if (isRunningSync) Logger.at(Level.INFO).log(String.format("Invocation %s switched to background thread", id.toString()));
             isRunningSync = false;
-            Compumancy.Get().ScheduleDaemon(this, Compumancy.Get().GetConfig().AsyncStepDelay + additionalDelay);
+            Compumancy.get().scheduleDaemon(this, Compumancy.get().getConfig().AsyncStepDelay + additionalDelay);
         }
         suspended.set(false);
         return true;
     }
 
-    public boolean Schedule(Ref<EntityStore> caster, World world) {
+    public boolean schedule(Ref<EntityStore> caster, World world) {
         this.caster = caster;
         this.world = world;
-        return Schedule();
+        return schedule();
     }
 
     @Override
@@ -209,26 +211,26 @@ public class Invocation implements Runnable {
         synchronized (this) {
             try {
                 //Logger.at(Level.INFO).log(String.format("Stepping invocation %s", id.toString()));
-                if (IsFinished()) { store.Kill(id); return; }
-                if (IsSuspended()) return;
-                Step();
-                if (IsFinished()) { store.Kill(id); return; }
-                if (IsSuspended()) return;
-                Schedule();
+                if (isFinished()) { store.kill(id); return; }
+                if (isSuspended()) return;
+                step();
+                if (isFinished()) { store.kill(id); return; }
+                if (isSuspended()) return;
+                schedule();
             } catch (Exception e) {
                 Logger.at(Level.INFO).log(String.format("Invocation %s terminated by %s: %s", id.toString(), e.getClass().getSimpleName(), e.getMessage()));
-                var player = Universe.get().getPlayer(store.GetOwner());
+                var player = Universe.get().getPlayer(store.getOwner());
                 if (player != null)
                     player.sendMessage(Message.raw(String.format("An invocation failed with %s: %s", e.getClass().getSimpleName(), e.getMessage())));
                 errored = true;
-                store.Kill(id);
+                store.kill(id);
                 throw e;
             }
         }
     }
 
-    public boolean IsDefinitionStoreAttached() { return definitionsAttached; }
-    public void AttachDefinitionStore(IDefinitionStore defStore) {
+    public boolean isDefinitionStoreAttached() { return definitionsAttached; }
+    public void attachDefinitionStore(IDefinitionStore defStore) {
         if (defStore == null) {
             definitionsAttached = false;
             maxUserDefs = 0;
@@ -236,32 +238,32 @@ public class Invocation implements Runnable {
             fixedDefs = null;
         } else {
             cachedDefFrames = new Object2ObjectOpenHashMap<>();
-            maxUserDefs = defStore.GetMaxUserDefs();
+            maxUserDefs = defStore.getMaxUserDefs();
             casterDefs = defStore.GetUserDefsMap();
-            String fixedVocabularyName = defStore.GetFixedVocabularyName();
+            String fixedVocabularyName = defStore.getFixedVocabularyName();
             if (fixedVocabularyName != null) {
-                fixedDefs = Vocabulary.GetVocabulary(fixedVocabularyName);
+                fixedDefs = Vocabulary.getVocabulary(fixedVocabularyName);
                 if (fixedDefs == null) Logger.at(Level.WARNING).log(String.format("The fixed vocabulary '%s' was not found", fixedVocabularyName));
             }
             definitionsAttached = true;
         }
     }
 
-    public void ExecuteDefinition(String defName) {
+    public void executeDefinition(String defName) {
         if (!definitionsAttached) {
-            PushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Execute, defName));
+            pushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Execute, defName));
             return;
         }
         ExecutionFrame frame;
         Word def;
         if ((frame = cachedDefFrames.get(defName)) != null) {
-            frameStack.addLast(frame.CopyFull());
-        } else if (fixedDefs != null && (def = fixedDefs.Get(defName)) != null) {
-            frame = def.ToExecutionFrame();
+            frameStack.addLast(frame.copyFull());
+        } else if (fixedDefs != null && (def = fixedDefs.get(defName)) != null) {
+            frame = def.toExecutionFrame();
             cachedDefFrames.put(defName, frame);
             frameStack.addLast(frame);
         } else if (casterDefs != null && (def = casterDefs.get(defName)) != null) {
-            frame = def.ToExecutionFrame();
+            frame = def.toExecutionFrame();
             cachedDefFrames.put(defName, frame);
             frameStack.addLast(frame);
         } else {
@@ -269,12 +271,12 @@ public class Invocation implements Runnable {
         }
     }
 
-    public void StoreDefinition(String defName, Word word) {
+    public void storeDefinition(String defName, Word word) {
         if (!definitionsAttached) {
-            PushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Store, defName, word));
+            pushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Store, defName, word));
             return;
         }
-        if (fixedDefs != null && fixedDefs.Contains(defName)) {
+        if (fixedDefs != null && fixedDefs.contains(defName)) {
             throw new InvalidOperationException(String.format("Attempted to override fixed definition '%s'", defName));
         }
         if (casterDefs == null) throw new CompileException(String.format("Failed to save definition '%s', definition store is read-only", defName));
@@ -283,30 +285,30 @@ public class Invocation implements Runnable {
         cachedDefFrames.remove(defName);
     }
 
-    public void LoadDefinition(String defName) {
+    public void loadDefinition(String defName) {
         if (!definitionsAttached) {
-            PushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Load, defName));
+            pushFrame(new DefSyncFrame(DefSyncFrame.DefAction.Load, defName));
             return;
         }
         Word def;
         ArrayList<VMObject> list;
-        if (fixedDefs != null && (def = fixedDefs.Get(defName)) != null) {
+        if (fixedDefs != null && (def = fixedDefs.get(defName)) != null) {
             list = new ArrayList<>();
-            def.AddContentsToList(list);
+            def.addContentsToList(list);
         } else if (casterDefs != null && (def = casterDefs.get(defName)) != null) {
             list = new ArrayList<>();
-            def.AddContentsToList(list);
+            def.addContentsToList(list);
         } else {
             throw new DefinitionNotFoundException(String.format("The definition '%s' was not found", defName));
         }
-        Push(new ListObject(list, def.GetExecuteSync()));
+        push(new ListObject(list, def.isExecuteSync()));
     }
 
-    public void AssertInAmbit(double x, double y, double z) {
+    public void assertInAmbit(double x, double y, double z) {
         //TODO: Implement
     }
 
-    public boolean IsInAmbit(double x, double y, double z) {
+    public boolean isInAmbit(double x, double y, double z) {
         return true; //TODO: Implement
     }
 

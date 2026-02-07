@@ -3,11 +3,9 @@ package me.freznel.compumancy.vm.execution.frame;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
-import me.freznel.compumancy.vm.compiler.CompileList;
 import me.freznel.compumancy.vm.compiler.Compiler;
 import me.freznel.compumancy.vm.execution.FrameSyncType;
 import me.freznel.compumancy.vm.execution.Invocation;
-import me.freznel.compumancy.vm.objects.VMObject;
 
 public class CompileFrame extends Frame {
     public static final BuilderCodec<CompileFrame> CODEC = BuilderCodec.builder(CompileFrame.class, CompileFrame::new)
@@ -28,24 +26,24 @@ public class CompileFrame extends Frame {
     }
 
     @Override
-    public int GetSize() {
+    public int getSize() {
         return compileString == null ? 1 : (int)Math.ceil(Math.sqrt(compileString.length()));
     }
 
     @Override
-    public boolean IsFinished() {
+    public boolean isFinished() {
         return done;
     }
 
     @Override
-    public void Execute(Invocation invocation, long interruptAt) {
-        var program = Compiler.Compile(compileString);
-        if (!program.isEmpty()) invocation.PushFrame(new ExecutionFrame(program));
+    public void execute(Invocation invocation, long interruptAt) {
+        var program = Compiler.compile(compileString);
+        if (!program.isEmpty()) invocation.pushFrame(new ExecutionFrame(program));
         done = true;
     }
 
     @Override
-    public FrameSyncType GetFrameSyncType() {
+    public FrameSyncType getFrameSyncType() {
         return FrameSyncType.Async; //Never invoke the compiler on the world thread
     }
 

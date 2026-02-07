@@ -59,46 +59,46 @@ public class DefSyncFrame extends Frame {
     }
 
     @Override
-    public int GetSize() {
-        return word == null ? 1 : word.GetSize();
+    public int getSize() {
+        return word == null ? 1 : word.getSize();
     }
 
     @Override
-    public boolean IsFinished() {
+    public boolean isFinished() {
         return done;
     }
 
     @Override
-    public void Execute(Invocation invocation, long interruptAt) {
-        if (!invocation.IsDefinitionStoreAttached()) {
-            var caster = invocation.GetCaster();
+    public void execute(Invocation invocation, long interruptAt) {
+        if (!invocation.isDefinitionStoreAttached()) {
+            var caster = invocation.getCaster();
             if (caster.isValid()) {
                 var store = caster.getStore();
-                var defComp = store.getComponent(caster, Compumancy.Get().GetDefinitionStoreComponentType());
-                if (defComp != null) invocation.AttachDefinitionStore(defComp);
+                var defComp = store.getComponent(caster, Compumancy.get().getDefinitionStoreComponentType());
+                if (defComp != null) invocation.attachDefinitionStore(defComp);
             }
         }
         switch (action) {
             case Store -> {
-                if (!invocation.IsDefinitionStoreAttached()) throw new VMException(String.format("Failed to store definition '%s', no definition store found", defName));
-                invocation.StoreDefinition(defName, word);
+                if (!invocation.isDefinitionStoreAttached()) throw new VMException(String.format("Failed to store definition '%s', no definition store found", defName));
+                invocation.storeDefinition(defName, word);
             }
             case Load -> {
-                if (!invocation.IsDefinitionStoreAttached()) throw new VMException(String.format("Failed to load definition '%s', no definition store found", defName));
-                invocation.LoadDefinition(defName);
+                if (!invocation.isDefinitionStoreAttached()) throw new VMException(String.format("Failed to load definition '%s', no definition store found", defName));
+                invocation.loadDefinition(defName);
             }
             case Execute -> {
-                if (!invocation.IsDefinitionStoreAttached()) throw new VMException(String.format("Failed to execute definition '%s', no definition store found", defName));
-                invocation.ExecuteDefinition(defName);
+                if (!invocation.isDefinitionStoreAttached()) throw new VMException(String.format("Failed to execute definition '%s', no definition store found", defName));
+                invocation.executeDefinition(defName);
             }
             default -> throw new VMException("Invalid DefSyncFrame action encountered");
         }
         done = true;
-        if (invocation.GetCurrentFrame() == this) invocation.GetFrameStack().removeLast();
+        if (invocation.getCurrentFrame() == this) invocation.getFrameStack().removeLast();
     }
 
     @Override
-    public FrameSyncType GetFrameSyncType() {
+    public FrameSyncType getFrameSyncType() {
         return FrameSyncType.Sync;
     }
 

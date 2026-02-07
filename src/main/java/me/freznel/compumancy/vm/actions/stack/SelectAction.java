@@ -11,17 +11,17 @@ import me.freznel.compumancy.vm.objects.BoolObject;
 * */
 public class SelectAction extends VMAction {
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        if (invocation.OperandCount() < 3) throw new StackUnderflowException("? expected at least 3 operands");
-        var c = invocation.Pop();
-        var b = invocation.Pop();
-        var a = invocation.Pop();
-        if (!(a instanceof BoolObject boolObject)) throw new InvalidOperationException(String.format("? expected Boolean * *, got %s %s %s", a.GetObjectName(), b.GetObjectName(), c.GetObjectName()));
-        invocation.Push(boolObject.GetValue() ? b : c); //Destructive read, no need to clone
+    public void execute(Invocation invocation) {
+        if (invocation.getOperandCount() < 3) throw new StackUnderflowException("? expected at least 3 operands");
+        var c = invocation.pop();
+        var b = invocation.pop();
+        var a = invocation.pop();
+        if (!(a instanceof BoolObject boolObject)) throw new InvalidOperationException(String.format("? expected Boolean * *, got %s %s %s", a.getObjectName(), b.getObjectName(), c.getObjectName()));
+        invocation.push(boolObject.getValue() ? b : c); //Destructive read, no need to clone
     }
 }

@@ -29,7 +29,7 @@ public class InvocationStore {
             .append(new KeyedCodec<>("Invocations", new ArrayCodec<>(InvocationState.CODEC, InvocationState[]::new)),
                     (o, states) -> {
                         for (InvocationState state : states) {
-                            o.loadedInvocations.put(state.GetId(), state);
+                            o.loadedInvocations.put(state.getId(), state);
                         }
                     },
                     o -> o.saveStates.toArray(new InvocationState[0]))
@@ -40,11 +40,11 @@ public class InvocationStore {
 
     private static final ConcurrentHashMap<UUID, InvocationStore> stores = new ConcurrentHashMap<>();
 
-    public static CompletableFuture<InvocationStore> Get(UUID owner) {
+    public static CompletableFuture<InvocationStore> get(UUID owner) {
         if (stores.containsKey(owner)) return CompletableFuture.completedFuture(stores.get(owner));
         return CompletableFuture.supplyAsync(() -> {
             return stores.computeIfAbsent(owner, _ -> {
-                var path = Compumancy.Get().getDataDirectory()
+                var path = Compumancy.get().getDataDirectory()
                         .resolve("store")
                         .resolve("invocation")
                         .resolve(owner.toString() + ".bson");
@@ -57,23 +57,23 @@ public class InvocationStore {
                     return new InvocationStore(owner);
                 }
             });
-        }, Compumancy.Get().GetDaemonExecutor());
+        }, Compumancy.get().getDaemonExecutor());
     }
 
-    public static boolean IsLoaded(UUID owner) { return stores.containsKey(owner); }
+    public static boolean isLoaded(UUID owner) { return stores.containsKey(owner); }
 
-    public static void ResetExecuteCount() {
+    public static void resetExecuteCount() {
         for (var store : stores.values()) {
             store.exeCount.set(0);
         }
     }
 
-    public static synchronized void SaveAll(boolean suspend) {
+    public static synchronized void saveAll(boolean suspend) {
         long start = System.nanoTime();
         var futures = new ArrayList<CompletableFuture<Integer>>();
 
         for (var store : stores.values()) {
-            futures.add(store.Save(suspend));
+            futures.add(store.save(suspend));
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -96,16 +96,16 @@ public class InvocationStore {
         saveStates = new ArrayList<>();
         invocations = new ConcurrentHashMap<>();
         loadedInvocations = new ConcurrentHashMap<>();
-        exeCapacity = Compumancy.Get().GetConfig().DelayThreshold;
-        exeDelayStep = Compumancy.Get().GetConfig().DelayPerStep;
+        exeCapacity = Compumancy.get().getConfig().DelayThreshold;
+        exeDelayStep = Compumancy.get().getConfig().DelayPerStep;
         exeCount = new AtomicInteger(0);
     }
 
     private InvocationStore(UUID owner) { this.owner = owner; this(); }
 
-    public UUID GetOwner() { return owner; }
+    public UUID getOwner() { return owner; }
 
-    public int Count() { return invocations.size(); }
+    public int count() { return invocations.size(); }
 
     public int resumeDelay() {
         int newCount = exeCount.accumulateAndGet(1, Integer::sum);
@@ -113,19 +113,19 @@ public class InvocationStore {
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public CompletableFuture<Integer> Save(boolean suspend) {
+    public CompletableFuture<Integer> save(boolean suspend) {
         return CompletableFuture.supplyAsync(() -> {
             saveStates.clear();
-            ArrayList<CompletableFuture<InvocationState>> persistFutures = new ArrayList<>(invocations.size());
+            saveStates.addAll(loadedInvocations.values());
 
             for (var invocation : invocations.values()) {
-                if (suspend) invocation.Suspend();
+                if (suspend) invocation.suspend();
                 synchronized (invocation) {
                     saveStates.add(new InvocationState(invocation));
                 }
             }
 
-            var path = Compumancy.Get().getDataDirectory()
+            var path = Compumancy.get().getDataDirectory()
                     .resolve("store")
                     .resolve("invocation")
                     .resolve(owner.toString() + ".bson");
@@ -135,66 +135,66 @@ public class InvocationStore {
             } catch (Exception e) {
                 return 0;
             }
-        }, Compumancy.Get().GetExecutor()); //Run on the high-priority blocking executor
+        }, Compumancy.get().getUserExecutor()); //Run on the high-priority blocking executor
     }
 
-    public boolean Resume(Invocation invocation) {
-        var id = invocation.GetId();
+    public boolean resume(Invocation invocation) {
+        var id = invocation.getId();
         if (invocations.containsKey(id)) return false;
         invocations.put(id, invocation);
-        var ref = invocation.GetCaster();
+        var ref = invocation.getCaster();
         if (!ref.isValid()) return false;
-        invocation.GetWorld().execute(() -> {
+        invocation.getWorld().execute(() -> {
             if (!ref.isValid()) {
                 invocations.remove(id);
             }
             var store = ref.getStore();
-            var comp = store.getComponent(ref, Compumancy.Get().GetInvocationComponentType());
-            if (comp == null) comp = store.addComponent(ref, Compumancy.Get().GetInvocationComponentType());
-            comp.SetOwner(owner);
-            comp.Add(id);
-            if (!invocation.Schedule()) {
-                comp.Remove(id);
+            var comp = store.getComponent(ref, Compumancy.get().getInvocationComponentType());
+            if (comp == null) comp = store.addComponent(ref, Compumancy.get().getInvocationComponentType());
+            comp.setOwner(owner);
+            comp.add(id);
+            if (!invocation.schedule()) {
+                comp.remove(id);
                 invocations.remove(id);
             }
         });
         return true;
     }
 
-    public boolean Suspend(UUID id) {
+    public boolean suspend(UUID id) {
         var invocation = invocations.get(id);
         if (invocation == null) return false;
-        invocation.Suspend();
+        invocation.suspend();
         return true;
     }
 
-    public boolean Kill(UUID id) {
+    public boolean kill(UUID id) {
         var invocation = invocations.remove(id);
         if (invocation == null) return false;
-        invocation.Suspend();
-        var ref = invocation.GetCaster();
+        invocation.suspend();
+        var ref = invocation.getCaster();
         if (!ref.isValid()) return true;
-        invocation.GetWorld().execute(() -> {
+        invocation.getWorld().execute(() -> {
             if (!ref.isValid()) return;
             var store = ref.getStore();
-            var comp = store.getComponent(ref, Compumancy.Get().GetInvocationComponentType());
-            if (comp != null) comp.Remove(id);
+            var comp = store.getComponent(ref, Compumancy.get().getInvocationComponentType());
+            if (comp != null) comp.remove(id);
         });
         return true;
     }
 
-    public boolean Resume(UUID id, Ref<EntityStore> caster, World world) {
+    public boolean resume(UUID id, Ref<EntityStore> caster, World world) {
         var invocation = invocations.get(id);
         if (invocation == null) {
             var state = loadedInvocations.get(id);
             if (state == null) return false;
             var restored = new Invocation(world, caster, state, this);
-            if (!restored.Schedule()) {
+            if (!restored.schedule()) {
                 return false;
             }
             invocations.put(id, restored);
             return true;
-        } else if (invocation.Schedule(caster, world)) {
+        } else if (invocation.schedule(caster, world)) {
             return true;
         } else {
             invocations.remove(id);
@@ -202,18 +202,18 @@ public class InvocationStore {
         }
     }
 
-    public void KillAll() {
+    public void killAll() {
         invocations.values().stream()
-                .collect(Collectors.groupingBy(Invocation::GetWorld))
+                .collect(Collectors.groupingBy(Invocation::getWorld))
                 .forEach((world, invocations) -> {
                     var store = world.getEntityStore().getStore();
                     world.execute(() -> {
                         for (var invocation : invocations) {
-                            this.invocations.remove(invocation.GetId());
-                            invocation.Suspend();
-                            var ref = invocation.GetCaster();
-                            var comp = store.getComponent(ref, Compumancy.Get().GetInvocationComponentType());
-                            if (comp != null) comp.Remove(invocation.GetId());
+                            this.invocations.remove(invocation.getId());
+                            invocation.suspend();
+                            var ref = invocation.getCaster();
+                            var comp = store.getComponent(ref, Compumancy.get().getInvocationComponentType());
+                            if (comp != null) comp.remove(invocation.getId());
                         }
                     });
                 });

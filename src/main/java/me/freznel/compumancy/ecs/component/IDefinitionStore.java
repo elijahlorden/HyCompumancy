@@ -8,10 +8,10 @@ public interface IDefinitionStore {
 
     public ConcurrentHashMap<String, Word> GetUserDefsMap();
 
-    public int GetMaxUserDefs();
-    public void SetMaxUserDefs(int maxUserDefs);
+    public int getMaxUserDefs();
+    public void setMaxUserDefs(int maxUserDefs);
 
-    public String GetFixedVocabularyName();
-    public void SetFixedVocabularyName(String fixedVocabularyName);
+    public String getFixedVocabularyName();
+    public void setFixedVocabularyName(String fixedVocabularyName);
 
 }

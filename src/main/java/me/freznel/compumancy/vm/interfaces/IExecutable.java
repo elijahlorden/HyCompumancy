@@ -10,8 +10,8 @@ import me.freznel.compumancy.vm.execution.Invocation;
  */
 public interface IExecutable {
 
-    public int ExecutionBudgetCost();
-    public void Execute(Invocation invocation) throws VMException;
-    public boolean IsExecuteSynchronous();
+    public int executionBudgetCost();
+    public void execute(Invocation invocation) throws VMException;
+    public boolean isExecuteSynchronous();
 
 }

@@ -6,7 +6,6 @@ import me.freznel.compumancy.vm.actions.flow.ForAction;
 import me.freznel.compumancy.vm.actions.misc.SpawnParticlesAction;
 import me.freznel.compumancy.vm.actions.query.RaycastBlockAction;
 import me.freznel.compumancy.vm.actions.stack.*;
-import me.freznel.compumancy.vm.compiler.Compiler;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
 import me.freznel.compumancy.vm.compiler.Word;
 import me.freznel.compumancy.vm.execution.frame.*;
@@ -20,40 +19,40 @@ import me.freznel.compumancy.vm.operators.unary.*;
 
 public class RegisterVMObjects {
 
-    public static void Register() {
+    public static void register() {
 
         //Unary Operators
-        Vocabulary.BASE.Add("len", new Word(UnaryOperator.Length.Instance));
-        Vocabulary.BASE.AddAlias("len", "abs");
-        Vocabulary.BASE.Add("negate", new Word(UnaryOperator.SignedNegate.Instance));
-        Vocabulary.BASE.Add("not", new Word(UnaryOperator.UnsignedNegate.Instance));
+        Vocabulary.BASE.add("len", new Word(UnaryOperator.Length.Instance));
+        Vocabulary.BASE.addAlias("len", "abs");
+        Vocabulary.BASE.add("negate", new Word(UnaryOperator.SignedNegate.Instance));
+        Vocabulary.BASE.add("not", new Word(UnaryOperator.UnsignedNegate.Instance));
 
         //Binary Operators
-        Vocabulary.BASE.Add("+", new Word(BinaryOperator.Add.Instance));
-        Vocabulary.BASE.Add("-", new Word(BinaryOperator.Subtract.Instance));
-        Vocabulary.BASE.Add("*", new Word(BinaryOperator.Multiply.Instance));
-        Vocabulary.BASE.Add("/", new Word(BinaryOperator.Divide.Instance));
-        Vocabulary.BASE.Add("mod", new Word(BinaryOperator.Mod.Instance));
+        Vocabulary.BASE.add("+", new Word(BinaryOperator.Add.Instance));
+        Vocabulary.BASE.add("-", new Word(BinaryOperator.Subtract.Instance));
+        Vocabulary.BASE.add("*", new Word(BinaryOperator.Multiply.Instance));
+        Vocabulary.BASE.add("/", new Word(BinaryOperator.Divide.Instance));
+        Vocabulary.BASE.add("mod", new Word(BinaryOperator.Mod.Instance));
 
-        Vocabulary.BASE.Add("and", new Word(BinaryOperator.And.Instance));
-        Vocabulary.BASE.Add("nand", new Word(BinaryOperator.Nand.Instance));
-        Vocabulary.BASE.Add("or", new Word(BinaryOperator.Or.Instance));
-        Vocabulary.BASE.Add("xor", new Word(BinaryOperator.Xor.Instance));
+        Vocabulary.BASE.add("and", new Word(BinaryOperator.And.Instance));
+        Vocabulary.BASE.add("nand", new Word(BinaryOperator.Nand.Instance));
+        Vocabulary.BASE.add("or", new Word(BinaryOperator.Or.Instance));
+        Vocabulary.BASE.add("xor", new Word(BinaryOperator.Xor.Instance));
 
-        Vocabulary.BASE.Add("?eq", new Word(BinaryOperator.Equal.Instance));
-        Vocabulary.BASE.Add("?neq", new Word(BinaryOperator.NotEqual.Instance));
-        Vocabulary.BASE.Add("?gt", new Word(BinaryOperator.GreaterThan.Instance));
-        Vocabulary.BASE.Add("?lt", new Word(BinaryOperator.LessThan.Instance));
-        Vocabulary.BASE.Add("?geq", new Word(BinaryOperator.GreaterThanOrEqualTo.Instance));
-        Vocabulary.BASE.Add("?leq", new Word(BinaryOperator.LessThanOrEqualTo.Instance));
+        Vocabulary.BASE.add("?eq", new Word(BinaryOperator.Equal.Instance));
+        Vocabulary.BASE.add("?neq", new Word(BinaryOperator.NotEqual.Instance));
+        Vocabulary.BASE.add("?gt", new Word(BinaryOperator.GreaterThan.Instance));
+        Vocabulary.BASE.add("?lt", new Word(BinaryOperator.LessThan.Instance));
+        Vocabulary.BASE.add("?geq", new Word(BinaryOperator.GreaterThanOrEqualTo.Instance));
+        Vocabulary.BASE.add("?leq", new Word(BinaryOperator.LessThanOrEqualTo.Instance));
 
-        RegisterCodecs();
-        RegisterOperatorSets();
-        RegisterActions();
-        RegisterCompilerWords();
+        registerCodecs();
+        registerOperatorSets();
+        registerActions();
+        registerCompilerWords();
     }
 
-    private static void RegisterCodecs() {
+    private static void registerCodecs() {
         //Objects
         VMObject.CODEC.register("EntityRef", EntityRefObject.class, EntityRefObject.CODEC);
         VMObject.CODEC.register("Bool", BoolObject.class, BoolObject.CODEC);
@@ -76,7 +75,7 @@ public class RegisterVMObjects {
 
     }
 
-    private static void RegisterOperatorSets() {
+    private static void registerOperatorSets() {
         //Number operator sets
         UnaryOperatorSet.Register(new NumberUnaryOperatorSet(), NumberObject.class);
         BinaryOperatorSet.Register(new NumberNumberBinaryOperatorSet(), NumberObject.class, NumberObject.class);
@@ -101,45 +100,45 @@ public class RegisterVMObjects {
 
     }
 
-    private static void RegisterActions() {
+    private static void registerActions() {
         //Stack actions
-        ActionHelpers.RegisterSimpleAction("dup", DuplicateAction.class, new DuplicateAction());
-        ActionHelpers.RegisterSimpleAction("drop", DropAction.class, new DropAction());
-        ActionHelpers.RegisterSimpleAction("swap", SwapAction.class, new SwapAction());
-        ActionHelpers.RegisterSimpleAction("over", OverAction.class, new OverAction());
+        ActionHelpers.registerSimpleAction("dup", DuplicateAction.class, new DuplicateAction());
+        ActionHelpers.registerSimpleAction("drop", DropAction.class, new DropAction());
+        ActionHelpers.registerSimpleAction("swap", SwapAction.class, new SwapAction());
+        ActionHelpers.registerSimpleAction("over", OverAction.class, new OverAction());
 
         //Logic actions
-        Vocabulary.BASE.Add("true", new Word(BoolObject.TRUE));
-        Vocabulary.BASE.Add("false", new Word(BoolObject.FALSE));
+        Vocabulary.BASE.add("true", new Word(BoolObject.TRUE));
+        Vocabulary.BASE.add("false", new Word(BoolObject.FALSE));
 
-        ActionHelpers.RegisterSimpleAction("?", SelectAction.class, new SelectAction());
+        ActionHelpers.registerSimpleAction("?", SelectAction.class, new SelectAction());
 
         //Flow control actions
-        ActionHelpers.RegisterSimpleAction("for", ForAction.class, new ForAction());
-        Vocabulary.BASE.Add(":", new Word(MetaObject.MetaOperation.StartDef.Instance));
-        Vocabulary.BASE.Add(";", new Word(MetaObject.MetaOperation.EndDef.Instance));
-        Vocabulary.BASE.Add("(", new Word(MetaObject.MetaOperation.StartList.Instance));
-        Vocabulary.BASE.Add(")", new Word(MetaObject.MetaOperation.EndList.Instance));
-        Vocabulary.BASE.Add("eval", new Word(MetaObject.MetaOperation.Eval.Instance));
-        Vocabulary.BASE.Add("eval/cc", new Word(MetaObject.MetaOperation.EvalCC.Instance));
+        ActionHelpers.registerSimpleAction("for", ForAction.class, new ForAction());
+        Vocabulary.BASE.add(":", new Word(MetaObject.MetaOperation.StartDef.Instance));
+        Vocabulary.BASE.add(";", new Word(MetaObject.MetaOperation.EndDef.Instance));
+        Vocabulary.BASE.add("(", new Word(MetaObject.MetaOperation.StartList.Instance));
+        Vocabulary.BASE.add(")", new Word(MetaObject.MetaOperation.EndList.Instance));
+        Vocabulary.BASE.add("eval", new Word(MetaObject.MetaOperation.Eval.Instance));
+        Vocabulary.BASE.add("eval/cc", new Word(MetaObject.MetaOperation.EvalCC.Instance));
 
         //Entity actions
-        ActionHelpers.RegisterSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
-        ActionHelpers.RegisterSimpleAction("send-message", SendMessageAction.class, new SendMessageAction());
-        ActionHelpers.RegisterSimpleAction("entity:get-position", GetEntityPositionAction.class, new GetEntityPositionAction());
-        ActionHelpers.RegisterSimpleAction("entity:get-rotation", GetEntityRotationAction.class, new GetEntityRotationAction());
-        ActionHelpers.RegisterSimpleAction("entity:get-velocity", GetEntityVelocityAction.class, new GetEntityVelocityAction());
-        ActionHelpers.RegisterSimpleAction("entity:get-head-position", GetEntityHeadPositionAction.class, new GetEntityHeadPositionAction());
-        ActionHelpers.RegisterSimpleAction("entity:get-look", GetEntityHeadRotationAction.class, new GetEntityHeadRotationAction());
+        ActionHelpers.registerSimpleAction("caster", GetCasterAction.class, new GetCasterAction());
+        ActionHelpers.registerSimpleAction("send-message", SendMessageAction.class, new SendMessageAction());
+        ActionHelpers.registerSimpleAction("entity:get-position", GetEntityPositionAction.class, new GetEntityPositionAction());
+        ActionHelpers.registerSimpleAction("entity:get-rotation", GetEntityRotationAction.class, new GetEntityRotationAction());
+        ActionHelpers.registerSimpleAction("entity:get-velocity", GetEntityVelocityAction.class, new GetEntityVelocityAction());
+        ActionHelpers.registerSimpleAction("entity:get-head-position", GetEntityHeadPositionAction.class, new GetEntityHeadPositionAction());
+        ActionHelpers.registerSimpleAction("entity:get-look", GetEntityHeadRotationAction.class, new GetEntityHeadRotationAction());
 
         //Query actions
-        ActionHelpers.RegisterSimpleAction("raycast-block", RaycastBlockAction.class, new RaycastBlockAction());
+        ActionHelpers.registerSimpleAction("raycast-block", RaycastBlockAction.class, new RaycastBlockAction());
 
         //Misc. actions
-        ActionHelpers.RegisterSimpleAction("spawn-particle", SpawnParticlesAction.class, new SpawnParticlesAction());
+        ActionHelpers.registerSimpleAction("spawn-particle", SpawnParticlesAction.class, new SpawnParticlesAction());
     }
 
-    public static void RegisterCompilerWords() {
+    public static void registerCompilerWords() {
 
 
 

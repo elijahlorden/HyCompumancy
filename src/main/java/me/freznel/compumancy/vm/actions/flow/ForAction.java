@@ -19,28 +19,28 @@ import me.freznel.compumancy.vm.objects.VMObject;
  */
 public class ForAction extends VMAction {
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 10;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        if (invocation.OperandCount() < 3) throw new StackUnderflowException("for: expected at least 3 operands");
-        var c = invocation.Pop();
-        var b = invocation.Pop();
-        var a = invocation.Pop();
+    public void execute(Invocation invocation) {
+        if (invocation.getOperandCount() < 3) throw new StackUnderflowException("for: expected at least 3 operands");
+        var c = invocation.pop();
+        var b = invocation.pop();
+        var a = invocation.pop();
 
         //Validate operands
         if (!(a instanceof NumberObject startObj) || !(b instanceof NumberObject endObj)) throw OperandException(a, b, c);
         if (!(c instanceof IExecutable || c instanceof IEvaluatable)) throw OperandException(a, b, c);
-        int start = (int)startObj.GetValue();
-        int end = (int)endObj.GetValue();
+        int start = (int)startObj.getValue();
+        int end = (int)endObj.getValue();
         int inc = start > end ? -1 : 1;
 
-        invocation.PushFrame(new NumericIteratorFrame(start, end, inc, c));
+        invocation.pushFrame(new NumericIteratorFrame(start, end, inc, c));
     }
 
     private static InvalidOperationException OperandException(VMObject a, VMObject b, VMObject c) {
-        return new InvalidOperationException(String.format("for: expected Number Number Evaluatable, got %s %s %s", a.GetObjectName(), b.GetObjectName(), c.GetObjectName()));
+        return new InvalidOperationException(String.format("for: expected Number Number Evaluatable, got %s %s %s", a.getObjectName(), b.getObjectName(), c.getObjectName()));
     }
 }

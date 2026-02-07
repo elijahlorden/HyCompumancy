@@ -9,13 +9,8 @@ import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayer
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import me.freznel.compumancy.Compumancy;
-import me.freznel.compumancy.vm.execution.Invocation;
-import me.freznel.compumancy.vm.execution.InvocationState;
 import me.freznel.compumancy.vm.store.InvocationStore;
 import org.jspecify.annotations.NonNull;
-
-import java.util.UUID;
 
 public class KillAllInvocationsCommand extends AbstractPlayerCommand {
     public KillAllInvocationsCommand() {
@@ -25,9 +20,9 @@ public class KillAllInvocationsCommand extends AbstractPlayerCommand {
 
     @Override
     protected void execute(@NonNull CommandContext commandContext, @NonNull Store<EntityStore> store, @NonNull Ref<EntityStore> ref, @NonNull PlayerRef playerRef, @NonNull World world) {
-        InvocationStore.Get(playerRef.getUuid()).thenAccept(invocationStore -> {
-            int count = invocationStore.Count();
-            invocationStore.KillAll();
+        InvocationStore.get(playerRef.getUuid()).thenAccept(invocationStore -> {
+            int count = invocationStore.count();
+            invocationStore.killAll();
             playerRef.sendMessage(Message.raw(String.format("Killed %d invocations", count)));
         });
     }

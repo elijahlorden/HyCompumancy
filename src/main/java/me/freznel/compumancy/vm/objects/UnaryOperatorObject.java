@@ -1,8 +1,5 @@
 package me.freznel.compumancy.vm.objects;
 
-import com.hypixel.hytale.codec.KeyedCodec;
-import com.hypixel.hytale.codec.builder.BuilderCodec;
-import com.hypixel.hytale.codec.codecs.EnumCodec;
 import me.freznel.compumancy.codec.CustomMapCodec;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.exceptions.StackUnderflowException;
@@ -16,7 +13,7 @@ public final class UnaryOperatorObject extends VMObject implements IEvaluatable 
     public static final CustomMapCodec<UnaryOperatorObject> CODEC = new CustomMapCodec<>(
             UnaryOperatorObject.class,
             "Op",
-            (UnaryOperatorObject obj) -> obj.GetOperator().toString(),
+            (UnaryOperatorObject obj) -> obj.getOperator().toString(),
             (String opStr) -> {
                 if (opStr == null) return UnaryOperator.Invalid.Instance;
                 try {
@@ -36,13 +33,13 @@ public final class UnaryOperatorObject extends VMObject implements IEvaluatable 
 
     public UnaryOperatorObject(UnaryOperator operator) { this.operator = operator; }
 
-    public UnaryOperator GetOperator() { return operator; }
+    public UnaryOperator getOperator() { return operator; }
 
     @Override
-    public String GetObjectName() { return "UnaryOperator"; }
+    public String getObjectName() { return "UnaryOperator"; }
 
     @Override
-    public int GetObjectSize() { return 1; }
+    public int getObjectSize() { return 1; }
 
     @Override
     public String toString() {
@@ -55,19 +52,19 @@ public final class UnaryOperatorObject extends VMObject implements IEvaluatable 
     }
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Evaluate(Invocation invocation) {
-        if (invocation.OperandCount() < 2) throw new StackUnderflowException(operator.toString() + " operator expected at least 1 operand");
-        VMObject a = invocation.Pop();
-        invocation.Push(UnaryOperatorSet.Operate(operator, a));
+    public void evaluate(Invocation invocation) {
+        if (invocation.getOperandCount() < 2) throw new StackUnderflowException(operator.toString() + " operator expected at least 1 operand");
+        VMObject a = invocation.pop();
+        invocation.push(UnaryOperatorSet.Operate(operator, a));
     }
 
     @Override
-    public boolean IsEvalSynchronous() {
+    public boolean isEvalSynchronous() {
         return false;
     }
 }

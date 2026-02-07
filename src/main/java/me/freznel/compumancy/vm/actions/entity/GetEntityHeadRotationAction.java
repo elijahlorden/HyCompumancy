@@ -1,6 +1,5 @@
 package me.freznel.compumancy.vm.actions.entity;
 
-import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.util.TargetUtil;
 import me.freznel.compumancy.vm.actions.ActionHelpers;
 import me.freznel.compumancy.vm.actions.VMAction;
@@ -10,22 +9,22 @@ import me.freznel.compumancy.vm.objects.Vector3Object;
 
 public class GetEntityHeadRotationAction extends VMAction {
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 2;
     }
 
     @Override
-    public boolean ExecuteSynchronous() {
+    public boolean isExecuteSynchronous() {
         return true;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        var ref = ActionHelpers.GetSyncEntityArgument(invocation, "entity:get-look");
-        if (ref == null || !ref.isValid()) { invocation.Push(NullObject.NULL); return; }
+    public void execute(Invocation invocation) {
+        var ref = ActionHelpers.getSyncEntityArgument(invocation, "entity:get-look");
+        if (ref == null || !ref.isValid()) { invocation.push(NullObject.NULL); return; }
         var store = ref.getStore();
         var look = TargetUtil.getLook(ref, store);
         var rot = look.getDirection();
-        invocation.Push(new Vector3Object(rot.x, rot.y, rot.z));
+        invocation.push(new Vector3Object(rot.x, rot.y, rot.z));
     }
 }

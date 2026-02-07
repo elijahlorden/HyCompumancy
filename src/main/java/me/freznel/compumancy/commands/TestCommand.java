@@ -1,29 +1,15 @@
 package me.freznel.compumancy.commands;
 
-import com.hypixel.hytale.assetstore.AssetRegistry;
-import com.hypixel.hytale.codec.ExtraInfo;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
-import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.inventory.ItemStack;
-import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
-import it.unimi.dsi.fastutil.shorts.Short2ObjectOpenHashMap;
 import me.freznel.compumancy.Compumancy;
-import me.freznel.compumancy.codec.CustomMapCodec;
 import me.freznel.compumancy.vm.execution.Invocation;
-import me.freznel.compumancy.vm.objects.BoolObject;
-import me.freznel.compumancy.vm.objects.MetaObject;
-import me.freznel.compumancy.vm.objects.VMObject;
 import me.freznel.compumancy.vm.store.InvocationStore;
-import org.bson.BsonValue;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Logger;
 
 /**
  * This is an example command that will simply print the name of the plugin in chat when used.
@@ -86,22 +72,22 @@ public class TestCommand extends CommandBase {
             var store = world.getEntityStore().getStore();
 
             CompletableFuture.supplyAsync(() -> {
-                var defComponentType = Compumancy.Get().GetDefinitionStoreComponentType();
+                var defComponentType = Compumancy.get().getDefinitionStoreComponentType();
                 var defComponent = store.getComponent(sender, defComponentType);
                 if (defComponent == null) {
                     defComponent = store.addComponent(sender, defComponentType);
                 }
-                defComponent.SetMaxUserDefs(Compumancy.Get().GetConfig().MaxPlayerDefinitions);
+                defComponent.setMaxUserDefs(Compumancy.get().getConfig().MaxPlayerDefinitions);
 
                 var UUIDComponent = store.getComponent(sender, com.hypixel.hytale.server.core.entity.UUIDComponent.getComponentType());
                 if (UUIDComponent == null) return null;
                 return UUIDComponent.getUuid();
             }, world)
-                    .thenComposeAsync(InvocationStore::Get)
+                    .thenComposeAsync(InvocationStore::get)
                     .thenAcceptAsync(invocationStore -> {
                         if (invocationStore == null) return;
                         var invocation = new Invocation(world, sender, invocationStore, input, 1000);
-                        invocationStore.Resume(invocation);
+                        invocationStore.resume(invocation);
                     }, world).exceptionally(e -> {
                         return null;
                     });

@@ -8,13 +8,13 @@ import me.freznel.compumancy.vm.objects.NullObject;
 public class GetCasterAction extends VMAction {
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        var caster = invocation.GetCaster();
-        invocation.Push(caster == null ? NullObject.NULL : EntityRefObject.FromRef(caster));
+    public void execute(Invocation invocation) {
+        var caster = invocation.getCaster();
+        invocation.push(caster == null ? NullObject.NULL : EntityRefObject.fromRef(caster));
     }
 }

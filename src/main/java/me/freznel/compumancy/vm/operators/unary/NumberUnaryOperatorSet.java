@@ -7,16 +7,16 @@ import me.freznel.compumancy.vm.operators.UnaryOperatorSet;
 public class NumberUnaryOperatorSet extends UnaryOperatorSet<NumberObject> {
     @Override
     public VMObject Length(NumberObject arg) {
-        return new NumberObject(Math.abs(arg.GetValue()));
+        return new NumberObject(Math.abs(arg.getValue()));
     }
 
     @Override
     public VMObject SignedNegate(NumberObject arg) {
-        return new NumberObject(-arg.GetValue());
+        return new NumberObject(-arg.getValue());
     }
 
     @Override
     public VMObject UnsignedNegate(NumberObject arg) {
-        return new NumberObject((~((long)arg.GetValue())) >> 12);
+        return new NumberObject((~((long)arg.getValue())) >> 12);
     }
 }

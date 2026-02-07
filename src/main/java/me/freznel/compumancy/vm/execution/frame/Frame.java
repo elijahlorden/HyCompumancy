@@ -7,11 +7,11 @@ import me.freznel.compumancy.vm.execution.Invocation;
 public abstract class Frame implements Cloneable {
     public static final CodecMapCodec<Frame> CODEC = new CodecMapCodec<>();
 
-    public abstract int GetSize();
-    public abstract boolean IsFinished();
-    public abstract void Execute(Invocation invocation, long interruptAt);
+    public abstract int getSize();
+    public abstract boolean isFinished();
+    public abstract void execute(Invocation invocation, long interruptAt);
 
-    public abstract FrameSyncType GetFrameSyncType();
+    public abstract FrameSyncType getFrameSyncType();
 
     @Override
     public abstract Frame clone();

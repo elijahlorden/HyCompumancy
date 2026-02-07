@@ -11,13 +11,13 @@ public final class NullObject extends VMObject {
             .build();
 
     @Override
-    public String GetObjectName() { return "Null"; }
+    public String getObjectName() { return "Null"; }
 
     @Override
     public String toString() { return "null"; }
 
     @Override
-    public int GetObjectSize() { return 1; }
+    public int getObjectSize() { return 1; }
 
     @Override
     public VMObject clone() {

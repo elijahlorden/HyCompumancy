@@ -9,7 +9,7 @@ public class NumberVector3BinaryOperatorSet extends BinaryOperatorSet<NumberObje
 
     @Override
     public VMObject Multiply(NumberObject a, Vector3Object b) {
-        return b.Multiply(a.GetValue());
+        return b.multiply(a.getValue());
     }
 
 }

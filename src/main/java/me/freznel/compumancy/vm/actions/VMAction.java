@@ -4,8 +4,6 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.objects.ActionObject;
 
-import javax.swing.*;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -17,7 +15,7 @@ public abstract class VMAction {
     private static final Map<Class<? extends VMAction>, String> Names = new ConcurrentHashMap<>();
     private static final Map<String, ActionObject> objects = new ConcurrentHashMap<>();
 
-    public static void Register(String name, VMAction action) {
+    public static void register(String name, VMAction action) {
         if (Actions.containsKey(name)) {
             Logger.at(Level.SEVERE).log("Attempted to register duplicate action: " + name);
             return;
@@ -26,20 +24,20 @@ public abstract class VMAction {
         Names.put(action.getClass(), name);
     }
 
-    public static VMAction GetAction(String name) {
+    public static VMAction getAction(String name) {
         return Actions.get(name);
     }
 
-    public static String GetName(VMAction action) {
+    public static String getName(VMAction action) {
         var cls = action.getClass();
-        return GetName(cls);
+        return getName(cls);
     }
 
-    public static String GetName(Class<? extends VMAction> cls) {
+    public static String getName(Class<? extends VMAction> cls) {
         return Names.get(cls);
     }
 
-    public static ActionObject GetObject(String name) {
+    public static ActionObject getObject(String name) {
         if (name == null) return null;
         ActionObject obj = objects.get(name);
         if (obj != null) return obj;
@@ -54,16 +52,16 @@ public abstract class VMAction {
         }
     }
 
-    public static ActionObject GetObject(Class<? extends VMAction> cls) {
+    public static ActionObject getObject(Class<? extends VMAction> cls) {
         String name = Names.get(cls);
         if (name == null) throw new IllegalArgumentException(String.format("Attempted to call VMAction.GetObject() with unregistered action class '%s'", cls.getName()));
-        return GetObject(name);
+        return getObject(name);
     }
 
-    public abstract int ExecutionBudgetCost();
+    public abstract int executionBudgetCost();
 
-    public abstract void Execute(Invocation invocation);
+    public abstract void execute(Invocation invocation);
 
-    public boolean ExecuteSynchronous() { return false; }
+    public boolean isExecuteSynchronous() { return false; }
 
 }

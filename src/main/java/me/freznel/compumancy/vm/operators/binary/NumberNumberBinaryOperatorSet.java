@@ -9,43 +9,43 @@ public class NumberNumberBinaryOperatorSet extends BinaryOperatorSet<NumberObjec
 
     @Override
     public VMObject Add(NumberObject a, NumberObject b) {
-        return new NumberObject(a.GetValue() + b.GetValue());
+        return new NumberObject(a.getValue() + b.getValue());
     }
     @Override
     public VMObject Subtract(NumberObject a, NumberObject b) {
-        return new NumberObject(a.GetValue() - b.GetValue());
+        return new NumberObject(a.getValue() - b.getValue());
     }
     @Override
     public VMObject Multiply(NumberObject a, NumberObject b) {
-        return new NumberObject(a.GetValue() * b.GetValue());
+        return new NumberObject(a.getValue() * b.getValue());
     }
     @Override
     public VMObject Divide(NumberObject a, NumberObject b) {
-        return new NumberObject(a.GetValue() / b.GetValue());
+        return new NumberObject(a.getValue() / b.getValue());
     }
     @Override
-    public VMObject Mod(NumberObject a, NumberObject b) { return new NumberObject(a.GetValue() % b.GetValue()); }
+    public VMObject Mod(NumberObject a, NumberObject b) { return new NumberObject(a.getValue() % b.getValue()); }
 
     @Override
-    public VMObject And(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) & ((long)b.GetValue())) >> 12); }
+    public VMObject And(NumberObject a, NumberObject b) { return new NumberObject((((long)a.getValue()) & ((long)b.getValue())) >> 12); }
     @Override
-    public VMObject Nand(NumberObject a, NumberObject b) { return new NumberObject((~((long)a.GetValue()) & ((long)b.GetValue())) >> 12);  }
+    public VMObject Nand(NumberObject a, NumberObject b) { return new NumberObject((~((long)a.getValue()) & ((long)b.getValue())) >> 12);  }
     @Override
-    public VMObject Or(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) | ((long)b.GetValue())) >> 12);  }
+    public VMObject Or(NumberObject a, NumberObject b) { return new NumberObject((((long)a.getValue()) | ((long)b.getValue())) >> 12);  }
     @Override
-    public VMObject Xor(NumberObject a, NumberObject b) { return new NumberObject((((long)a.GetValue()) ^ ((long)b.GetValue())) >> 12);  }
+    public VMObject Xor(NumberObject a, NumberObject b) { return new NumberObject((((long)a.getValue()) ^ ((long)b.getValue())) >> 12);  }
 
     @Override
-    public VMObject Equal(NumberObject a, NumberObject b) { return a.GetValue() == b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject Equal(NumberObject a, NumberObject b) { return a.getValue() == b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject NotEqual(NumberObject a, NumberObject b) { return a.GetValue() != b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject NotEqual(NumberObject a, NumberObject b) { return a.getValue() != b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject GreaterThan(NumberObject a, NumberObject b) { return a.GetValue() > b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject GreaterThan(NumberObject a, NumberObject b) { return a.getValue() > b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject LessThan(NumberObject a, NumberObject b) { return a.GetValue() < b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject LessThan(NumberObject a, NumberObject b) { return a.getValue() < b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject GreaterThanOrEqualTo(NumberObject a, NumberObject b) { return a.GetValue() >= b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject GreaterThanOrEqualTo(NumberObject a, NumberObject b) { return a.getValue() >= b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
     @Override
-    public VMObject LessThanOrEqualTo(NumberObject a, NumberObject b) { return a.GetValue() <= b.GetValue() ? BoolObject.TRUE : BoolObject.FALSE; }
+    public VMObject LessThanOrEqualTo(NumberObject a, NumberObject b) { return a.getValue() <= b.getValue() ? BoolObject.TRUE : BoolObject.FALSE; }
 
 }

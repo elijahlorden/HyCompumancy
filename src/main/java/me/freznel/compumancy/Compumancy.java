@@ -25,25 +25,25 @@ public class Compumancy extends JavaPlugin {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
 
     private static Compumancy instance;
-    public static Compumancy Get() { return instance; }
+    public static Compumancy get() { return instance; }
 
     private ScheduledExecutorService executor;
-    public Executor GetDaemonExecutor() { return executor; }
-    public void ScheduleDaemon(Runnable runnable, long delay) {
+    public Executor getDaemonExecutor() { return executor; }
+    public void scheduleDaemon(Runnable runnable, long delay) {
         executor.schedule(runnable, delay, TimeUnit.MILLISECONDS);
     }
 
     private Executor userThreadPool;
-    public Executor GetExecutor() { return userThreadPool; }
+    public Executor getUserExecutor() { return userThreadPool; }
 
     private ComponentType<EntityStore, InvocationComponent> invocationComponentType;
-    public ComponentType<EntityStore, InvocationComponent> GetInvocationComponentType() { return invocationComponentType; }
+    public ComponentType<EntityStore, InvocationComponent> getInvocationComponentType() { return invocationComponentType; }
 
     private ComponentType<EntityStore, DefinitionStoreComponent> definitionStoreComponentType;
-    public ComponentType<EntityStore, DefinitionStoreComponent> GetDefinitionStoreComponentType() { return definitionStoreComponentType; }
+    public ComponentType<EntityStore, DefinitionStoreComponent> getDefinitionStoreComponentType() { return definitionStoreComponentType; }
 
     private final Config<CompumancyConfig> config;
-    public CompumancyConfig GetConfig() { return config.get(); }
+    public CompumancyConfig getConfig() { return config.get(); }
 
     public Compumancy(JavaPluginInit init) {
         super(init);
@@ -56,13 +56,13 @@ public class Compumancy extends JavaPlugin {
         LOGGER.at(Level.INFO).log("Running setup");
 
         executor = Executors.newScheduledThreadPool(config.get().AsyncThreadCount);
-        executor.scheduleAtFixedRate(InvocationStore::ResetExecuteCount, 1000, 1000, TimeUnit.MILLISECONDS);
+        executor.scheduleAtFixedRate(InvocationStore::resetExecuteCount, 1000, 1000, TimeUnit.MILLISECONDS);
 
         LOGGER.at(Level.INFO).log(String.format("Created ScheduledThreadPool with %d threads", config.get().AsyncThreadCount));
 
         userThreadPool = ThreadUtil.newCachedThreadPool(32, Thread::new);
 
-        RegisterVMObjects.Register();
+        RegisterVMObjects.register();
 
         ComponentRegistryProxy<EntityStore> entityStoreComponentRegistry = this.getEntityStoreRegistry();
 
@@ -80,7 +80,7 @@ public class Compumancy extends JavaPlugin {
 
     @Override
     protected void shutdown() {
-        InvocationStore.SaveAll(true);
+        InvocationStore.saveAll(true);
         executor.shutdown();
     }
 

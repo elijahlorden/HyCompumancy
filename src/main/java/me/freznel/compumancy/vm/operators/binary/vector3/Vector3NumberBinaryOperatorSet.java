@@ -1,6 +1,5 @@
 package me.freznel.compumancy.vm.operators.binary.vector3;
 
-import me.freznel.compumancy.vm.objects.BoolObject;
 import me.freznel.compumancy.vm.objects.NumberObject;
 import me.freznel.compumancy.vm.objects.VMObject;
 import me.freznel.compumancy.vm.objects.Vector3Object;
@@ -10,12 +9,12 @@ public class Vector3NumberBinaryOperatorSet extends BinaryOperatorSet<Vector3Obj
 
     @Override
     public VMObject Multiply(Vector3Object a, NumberObject b) {
-        return a.Multiply(b.GetValue());
+        return a.multiply(b.getValue());
     }
 
     @Override
     public VMObject Divide(Vector3Object a, NumberObject b) {
-        return a.Divide(b.GetValue());
+        return a.divide(b.getValue());
     }
 
 }

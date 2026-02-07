@@ -9,23 +9,23 @@ import me.freznel.compumancy.vm.objects.Vector3Object;
 
 public class GetEntityRotationAction extends VMAction {
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 2;
     }
 
     @Override
-    public boolean ExecuteSynchronous() {
+    public boolean isExecuteSynchronous() {
         return true;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        var ref = ActionHelpers.GetSyncEntityArgument(invocation, "entity:get-rotation");
-        if (ref == null || !ref.isValid()) { invocation.Push(NullObject.NULL); return; }
+    public void execute(Invocation invocation) {
+        var ref = ActionHelpers.getSyncEntityArgument(invocation, "entity:get-rotation");
+        if (ref == null || !ref.isValid()) { invocation.push(NullObject.NULL); return; }
         var store = ref.getStore();
         var transform = store.getComponent(ref, TransformComponent.getComponentType());
-        if (transform == null) { invocation.Push(NullObject.NULL); return; }
+        if (transform == null) { invocation.push(NullObject.NULL); return; }
         var rot = transform.getRotation();
-        invocation.Push(new Vector3Object(rot.x, rot.y, rot.z));
+        invocation.push(new Vector3Object(rot.x, rot.y, rot.z));
     }
 }

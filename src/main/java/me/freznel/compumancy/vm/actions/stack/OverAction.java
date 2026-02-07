@@ -7,16 +7,16 @@ import me.freznel.compumancy.vm.execution.Invocation;
 public class OverAction extends VMAction {
 
     @Override
-    public int ExecutionBudgetCost() {
+    public int executionBudgetCost() {
         return 1;
     }
 
     @Override
-    public void Execute(Invocation invocation) {
-        if (invocation.OperandCount() < 2) throw new StackUnderflowException("over expected at least 2 operand");
-        var b = invocation.Pop();
-        var a = invocation.Peek();
-        invocation.Push(b);
-        invocation.Push(a.clone());
+    public void execute(Invocation invocation) {
+        if (invocation.getOperandCount() < 2) throw new StackUnderflowException("over expected at least 2 operand");
+        var b = invocation.pop();
+        var a = invocation.peek();
+        invocation.push(b);
+        invocation.push(a.clone());
     }
 }
