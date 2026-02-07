@@ -25,7 +25,7 @@ public class GetEntityHeadRotationAction extends VMAction {
         if (ref == null || !ref.isValid()) { invocation.Push(NullObject.NULL); return; }
         var store = ref.getStore();
         var look = TargetUtil.getLook(ref, store);
-        var rot = look.getRotation();
+        var rot = look.getDirection();
         invocation.Push(new Vector3Object(rot.x, rot.y, rot.z));
     }
 }

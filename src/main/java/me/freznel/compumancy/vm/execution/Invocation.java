@@ -302,7 +302,13 @@ public class Invocation implements Runnable {
         Push(new ListObject(list, def.GetExecuteSync()));
     }
 
+    public void AssertInAmbit(double x, double y, double z) {
+        //TODO: Implement
+    }
 
+    public boolean IsInAmbit(double x, double y, double z) {
+        return true; //TODO: Implement
+    }
 
 
 

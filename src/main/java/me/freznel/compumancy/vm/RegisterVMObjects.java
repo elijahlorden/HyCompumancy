@@ -3,6 +3,8 @@ package me.freznel.compumancy.vm;
 import me.freznel.compumancy.vm.actions.ActionHelpers;
 import me.freznel.compumancy.vm.actions.entity.*;
 import me.freznel.compumancy.vm.actions.flow.ForAction;
+import me.freznel.compumancy.vm.actions.misc.SpawnParticlesAction;
+import me.freznel.compumancy.vm.actions.query.RaycastBlockAction;
 import me.freznel.compumancy.vm.actions.stack.*;
 import me.freznel.compumancy.vm.compiler.Compiler;
 import me.freznel.compumancy.vm.compiler.Vocabulary;
@@ -11,6 +13,9 @@ import me.freznel.compumancy.vm.execution.frame.*;
 import me.freznel.compumancy.vm.objects.*;
 import me.freznel.compumancy.vm.operators.*;
 import me.freznel.compumancy.vm.operators.binary.*;
+import me.freznel.compumancy.vm.operators.binary.vector3.NumberVector3BinaryOperatorSet;
+import me.freznel.compumancy.vm.operators.binary.vector3.Vector3NumberBinaryOperatorSet;
+import me.freznel.compumancy.vm.operators.binary.vector3.Vector3Vector3BinaryOperatorSet;
 import me.freznel.compumancy.vm.operators.unary.*;
 
 public class RegisterVMObjects {
@@ -84,6 +89,12 @@ public class RegisterVMObjects {
         BinaryOperatorSet.Register(new BooleanNumberBinaryOperatorSet(), BoolObject.class, NumberObject.class);
         BinaryOperatorSet.Register(new NumberBooleanBinaryOperatorSet(), NumberObject.class, BoolObject.class);
 
+        //Vector3 operator sets
+        UnaryOperatorSet.Register(new Vector3UnaryOperatorSet(), Vector3Object.class);
+        BinaryOperatorSet.Register(new Vector3Vector3BinaryOperatorSet(), Vector3Object.class, Vector3Object.class);
+        BinaryOperatorSet.Register(new Vector3NumberBinaryOperatorSet(), Vector3Object.class, NumberObject.class);
+        BinaryOperatorSet.Register(new NumberVector3BinaryOperatorSet(), NumberObject.class, Vector3Object.class);
+
         //String operator sets
 
         //List operator sets
@@ -121,6 +132,11 @@ public class RegisterVMObjects {
         ActionHelpers.RegisterSimpleAction("entity:get-head-position", GetEntityHeadPositionAction.class, new GetEntityHeadPositionAction());
         ActionHelpers.RegisterSimpleAction("entity:get-look", GetEntityHeadRotationAction.class, new GetEntityHeadRotationAction());
 
+        //Query actions
+        ActionHelpers.RegisterSimpleAction("raycast-block", RaycastBlockAction.class, new RaycastBlockAction());
+
+        //Misc. actions
+        ActionHelpers.RegisterSimpleAction("spawn-particle", SpawnParticlesAction.class, new SpawnParticlesAction());
     }
 
     public static void RegisterCompilerWords() {

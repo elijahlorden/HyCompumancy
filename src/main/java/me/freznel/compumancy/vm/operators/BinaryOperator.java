@@ -36,16 +36,17 @@ public enum BinaryOperator {
         Instance = new BinaryOperatorObject(this);
     }
 
-    public <T extends VMObject, K extends VMObject> void  StandardException(String s, T left, K right) { throw new InvalidOperationException(String.format("Attempted to %s %s and %s", s, left.GetObjectName(), right.GetObjectName())); }
-    public <T extends VMObject, K extends VMObject> void  CompareException(T left, K right) { throw new InvalidOperationException(String.format("Attempted to compare %s and %s", left.GetObjectName(), right.GetObjectName())); }
+    public <T extends VMObject, K extends VMObject> VMObject StandardException(String s, T left, K right) { throw new InvalidOperationException(String.format("Attempted to %s %s and %s", s, left.GetObjectName(), right.GetObjectName())); }
+    public <T extends VMObject, K extends VMObject> VMObject CompareException(T left, K right) { throw new InvalidOperationException(String.format("Attempted to compare %s and %s", left.GetObjectName(), right.GetObjectName())); }
 
-    public <T extends VMObject, K extends VMObject> void ThrowInvalidOperation(T left, K right)
+    @SuppressWarnings("UnusedReturnValue")
+    public <T extends VMObject, K extends VMObject> VMObject ThrowInvalidOperation(T left, K right)
     {
-        switch (this) {
+        return switch (this) {
             case Invalid -> throw new InvalidOperationException("Encountered an invalid operator");
             case Equal, NotEqual, GreaterThan, LessThan, GreaterThanOrEqualTo, LessThanOrEqualTo -> CompareException(left, right);
             default -> StandardException(this.toString(), left, right);
-        }
+        };
     }
 
 

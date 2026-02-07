@@ -2,6 +2,8 @@ package me.freznel.compumancy.vm.operators;
 
 import com.hypixel.hytale.logger.HytaleLogger;
 import me.freznel.compumancy.vm.exceptions.InvalidOperationException;
+import me.freznel.compumancy.vm.objects.BoolObject;
+import me.freznel.compumancy.vm.objects.NullObject;
 import me.freznel.compumancy.vm.objects.VMObject;
 
 import java.util.HashMap;
@@ -30,7 +32,16 @@ public class BinaryOperatorSet<T extends VMObject, K extends VMObject> {
     {
         @SuppressWarnings("unchecked")
         BinaryOperatorSet<T, K> set = (BinaryOperatorSet<T, K>) Sets.get(new OperatorSetKey(left.getClass(), right.getClass()));
-        if (set == null) throw new InvalidOperationException(String.format("Attempted to %s %s and %s", operator.toString(), left.getClass().getName(), right.getClass().getName()));
+
+        if (set == null) {
+            if (operator == BinaryOperator.Equal) {
+                return BoolObject.FALSE;
+            } else if (operator == BinaryOperator.NotEqual) {
+                return BoolObject.TRUE;
+            } else {
+                return operator.ThrowInvalidOperation(left, right);
+            }
+        }
 
         return switch (operator)
         {
@@ -53,23 +64,22 @@ public class BinaryOperatorSet<T extends VMObject, K extends VMObject> {
         };
     }
 
+    public VMObject Add(T a, K b) { return BinaryOperator.Add.ThrowInvalidOperation(a, b); }
+    public VMObject Subtract(T a, K b) { return BinaryOperator.Subtract.ThrowInvalidOperation(a, b); }
+    public VMObject Multiply(T a, K b) { return BinaryOperator.Multiply.ThrowInvalidOperation(a, b); }
+    public VMObject Divide(T a, K b) { return BinaryOperator.Divide.ThrowInvalidOperation(a, b); }
+    public VMObject Mod(T a, K b) { return BinaryOperator.Mod.ThrowInvalidOperation(a, b); }
 
-    public VMObject Add(T a, K b) { BinaryOperator.Add.ThrowInvalidOperation(a, b); return null; }
-    public VMObject Subtract(T a, K b) { BinaryOperator.Subtract.ThrowInvalidOperation(a, b); return null; }
-    public VMObject Multiply(T a, K b) { BinaryOperator.Multiply.ThrowInvalidOperation(a, b); return null; }
-    public VMObject Divide(T a, K b) { BinaryOperator.Divide.ThrowInvalidOperation(a, b); return null; }
-    public VMObject Mod(T a, K b) { BinaryOperator.Mod.ThrowInvalidOperation(a, b); return null; }
+    public VMObject And(T a, K b) { return BinaryOperator.And.ThrowInvalidOperation(a, b); }
+    public VMObject Nand(T a, K b) { return BinaryOperator.Nand.ThrowInvalidOperation(a, b); }
+    public VMObject Or(T a, K b) { return BinaryOperator.Or.ThrowInvalidOperation(a, b); }
+    public VMObject Xor(T a, K b) { return BinaryOperator.Xor.ThrowInvalidOperation(a, b); }
 
-    public VMObject And(T a, K b) { BinaryOperator.And.ThrowInvalidOperation(a, b); return null; }
-    public VMObject Nand(T a, K b) { BinaryOperator.Nand.ThrowInvalidOperation(a, b); return null; }
-    public VMObject Or(T a, K b) { BinaryOperator.Or.ThrowInvalidOperation(a, b); return null; }
-    public VMObject Xor(T a, K b) { BinaryOperator.Xor.ThrowInvalidOperation(a, b); return null; }
-
-    public VMObject Equal(T a, K b) { BinaryOperator.Equal.ThrowInvalidOperation(a, b); return null; }
-    public VMObject NotEqual(T a, K b) { BinaryOperator.NotEqual.ThrowInvalidOperation(a, b); return null; }
-    public VMObject GreaterThan(T a, K b) { BinaryOperator.GreaterThan.ThrowInvalidOperation(a, b); return null; }
-    public VMObject LessThan(T a, K b) { BinaryOperator.LessThan.ThrowInvalidOperation(a, b); return null; }
-    public VMObject GreaterThanOrEqualTo(T a, K b) { BinaryOperator.GreaterThanOrEqualTo.ThrowInvalidOperation(a, b); return null; }
-    public VMObject LessThanOrEqualTo(T a, K b) { BinaryOperator.LessThanOrEqualTo.ThrowInvalidOperation(a, b); return null; }
+    public VMObject Equal(T a, K b) { return BinaryOperator.Equal.ThrowInvalidOperation(a, b); }
+    public VMObject NotEqual(T a, K b) { return BinaryOperator.NotEqual.ThrowInvalidOperation(a, b); }
+    public VMObject GreaterThan(T a, K b) { return BinaryOperator.GreaterThan.ThrowInvalidOperation(a, b); }
+    public VMObject LessThan(T a, K b) { return BinaryOperator.LessThan.ThrowInvalidOperation(a, b); }
+    public VMObject GreaterThanOrEqualTo(T a, K b) { return BinaryOperator.GreaterThanOrEqualTo.ThrowInvalidOperation(a, b); }
+    public VMObject LessThanOrEqualTo(T a, K b) { return BinaryOperator.LessThanOrEqualTo.ThrowInvalidOperation(a, b); }
 
 }
