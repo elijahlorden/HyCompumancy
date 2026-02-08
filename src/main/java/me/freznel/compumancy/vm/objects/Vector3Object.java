@@ -4,6 +4,7 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.math.vector.Vector3i;
 import me.freznel.compumancy.vm.exceptions.VMException;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.interfaces.IEvaluatable;
@@ -29,6 +30,7 @@ public final class Vector3Object extends VMObject implements IEvaluatable {
 
     public Vector3Object() { x = 0; y = 0; z = 0; }
     public Vector3Object(Vector3d vector) { x = vector.x; y = vector.y; z = vector.z; }
+    public Vector3Object(Vector3i vector) { x = vector.x; y = vector.y; z = vector.z; }
     public Vector3Object(double x, double y, double z) { this.x = x; this.y = y; this.z = z; }
     public Vector3Object(Vector3Object other) {
         this.x = other.x;

@@ -5,6 +5,7 @@ import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import me.freznel.compumancy.Compumancy;
+import me.freznel.compumancy.vm.execution.Caster;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.store.InvocationStore;
 
@@ -86,7 +87,7 @@ public class TestCommand extends CommandBase {
                     .thenComposeAsync(InvocationStore::get)
                     .thenAcceptAsync(invocationStore -> {
                         if (invocationStore == null) return;
-                        var invocation = new Invocation(world, sender, invocationStore, input, 1000);
+                        var invocation = new Invocation(world, Caster.FromEntity(sender), invocationStore, input, 1000);
                         invocationStore.resume(invocation);
                     }, world).exceptionally(e -> {
                         return null;

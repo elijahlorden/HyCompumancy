@@ -10,13 +10,14 @@ import com.hypixel.hytale.component.system.RefSystem;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import me.freznel.compumancy.Compumancy;
+import me.freznel.compumancy.vm.execution.Caster;
 import me.freznel.compumancy.vm.store.InvocationStore;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
-public class InvocationComponent implements Component<EntityStore> {
+public class InvocationComponent implements Component<EntityStore>, IInvocationStore {
     public static final BuilderCodec<InvocationComponent> CODEC = BuilderCodec.builder(InvocationComponent.class, InvocationComponent::new)
             .append(new KeyedCodec<>("Owner", Codec.UUID_BINARY), (o, v) -> o.owner = v, o -> o.owner)
             .add()
@@ -49,25 +50,23 @@ public class InvocationComponent implements Component<EntityStore> {
     }
 
 
-
-
     public static class InvocationComponentRefSystem extends RefSystem<EntityStore> {
         private static ComponentType<EntityStore, InvocationComponent> COMPONENT_TYPE;
 
         public InvocationComponentRefSystem() {
             COMPONENT_TYPE = Compumancy.get().getInvocationComponentType();
         }
-
         @Override
         public void onEntityAdded(@NonNull Ref<EntityStore> ref, @NonNull AddReason addReason, @NonNull Store<EntityStore> store, @NonNull CommandBuffer<EntityStore> commandBuffer) {
             var comp = store.getComponent(ref, COMPONENT_TYPE);
             if (comp == null || comp.invocations.isEmpty()) return;
             var set = comp.invocations;
             var world = store.getExternalData().getWorld();
+            var caster = Caster.FromEntity(ref);
             InvocationStore.get(comp.owner).thenAccept(invocationStore -> {
                 var failed = new ObjectLinkedOpenHashSet<UUID>();
                 for (UUID id : set) {
-                    if (!invocationStore.resume(id, ref, world)) failed.add(id);
+                    if (!invocationStore.resume(id, caster, world)) failed.add(id);
                 }
                 if (!failed.isEmpty()) {
                     world.execute(() -> {

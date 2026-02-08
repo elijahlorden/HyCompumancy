@@ -71,12 +71,7 @@ public class DefSyncFrame extends Frame {
     @Override
     public void execute(Invocation invocation, long interruptAt) {
         if (!invocation.isDefinitionStoreAttached()) {
-            var caster = invocation.getCaster();
-            if (caster.isValid()) {
-                var store = caster.getStore();
-                var defComp = store.getComponent(caster, Compumancy.get().getDefinitionStoreComponentType());
-                if (defComp != null) invocation.attachDefinitionStore(defComp);
-            }
+            invocation.attachDefinitionStore(invocation.getCaster().getDefinitionStoreComponent());
         }
         switch (action) {
             case Store -> {

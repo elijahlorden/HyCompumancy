@@ -26,7 +26,6 @@ public class DefinitionStoreComponent implements Component<EntityStore>, IDefini
             .add()
             .build();
 
-
     private final ConcurrentHashMap<String, Word> userDefs;
     private int maxUserDefs;
     private String fixedVocabularyName;

@@ -33,7 +33,7 @@ public class Invocation implements Runnable {
     private static final HytaleLogger Logger = HytaleLogger.forEnclosingClass();
 
     private World world;
-    private Ref<EntityStore> caster;
+    private Caster<?> caster;
     private InvocationStore store;
 
     private ArrayList<VMObject> operandStack;
@@ -42,7 +42,6 @@ public class Invocation implements Runnable {
     private int currentExecutionBudget;
 
     private final UUID id;
-    private long nextCheckpoint;
     private final AtomicBoolean suspended;
     private boolean errored;
     private boolean isRunningSync;
@@ -54,13 +53,17 @@ public class Invocation implements Runnable {
     private int maxUserDefs;
     private Vocabulary fixedDefs;
 
+    private double charge;
+    private long chargeAmountIncreaseTimestamp;
+    private double amountToCharge;
+
     public Invocation() {
         this.id = UUID.randomUUID();
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
     }
 
-    public Invocation(World world, Ref<EntityStore> caster, InvocationStore store, ArrayList<VMObject> contents, int executionBudget) {
+    public Invocation(World world, Caster<?> caster, InvocationStore store, ArrayList<VMObject> contents, int executionBudget) {
         this.operandStack = new ArrayList<>();
         this.frameStack = new ArrayList<>();
         this.executionBudget = executionBudget;
@@ -74,7 +77,7 @@ public class Invocation implements Runnable {
         this.isRunningSync = false;
     }
 
-    public Invocation(World world, Ref<EntityStore> caster, InvocationStore store, String compileString, int executionBudget) {
+    public Invocation(World world, Caster<?> caster, InvocationStore store, String compileString, int executionBudget) {
         this.operandStack = new ArrayList<>();
         this.frameStack = new ArrayList<>();
         this.executionBudget = executionBudget;
@@ -88,7 +91,7 @@ public class Invocation implements Runnable {
         pushFrame(new CompileFrame(compileString));
     }
 
-    public Invocation(World world, Ref<EntityStore> caster, InvocationState state, InvocationStore store) {
+    public Invocation(World world, Caster<?> caster, InvocationState state, InvocationStore store) {
         this.caster = caster;
         this.world = world;
         this.executionBudget = state.getExecutionBudget();
@@ -98,10 +101,12 @@ public class Invocation implements Runnable {
         this.suspended = new AtomicBoolean(true);
         this.isRunningSync = false;
         this.store = store;
+        this.lastRunTimestamp = state.getLastRunTimestamp();
+        this.charge = state.getCharge();
     }
 
     public World getWorld() { return world; }
-    public Ref<EntityStore> getCaster() { return caster; }
+    public Caster<?> getCaster() { return caster; }
     public InvocationStore getStore() { return store; }
 
     public void setOperandStack(ArrayList<VMObject> operandStack) { this.operandStack = operandStack; }
@@ -114,6 +119,7 @@ public class Invocation implements Runnable {
     public int getCurrentExecutionBudget() { return this.currentExecutionBudget; }
     public UUID getId() { return this.id; }
     public long getLastRunTimestamp() { return this.lastRunTimestamp; }
+    public double getCharge() { return this.charge; }
 
     public Frame getCurrentFrame() { return frameStack.isEmpty() ? null : frameStack.getLast(); }
     public boolean isFinished() { return frameStack.isEmpty(); }
@@ -124,7 +130,10 @@ public class Invocation implements Runnable {
     }
     public boolean isRunningSync() { return this.isRunningSync; }
     public boolean isSuspended() { return this.suspended.get(); }
-    public void suspend() { this.suspended.set(true); }
+    public void suspend() {
+        this.suspended.set(true);
+        attachDefinitionStore(null);
+    }
 
     public int getOperandCount() { return operandStack.size(); }
     public VMObject pop() { return operandStack.removeLast(); }
@@ -200,7 +209,7 @@ public class Invocation implements Runnable {
         return true;
     }
 
-    public boolean schedule(Ref<EntityStore> caster, World world) {
+    public boolean schedule(Caster<?> caster, World world) {
         this.caster = caster;
         this.world = world;
         return schedule();
@@ -216,6 +225,7 @@ public class Invocation implements Runnable {
                 step();
                 if (isFinished()) { store.kill(id); return; }
                 if (isSuspended()) return;
+                lastRunTimestamp = System.currentTimeMillis();
                 schedule();
             } catch (Exception e) {
                 Logger.at(Level.INFO).log(String.format("Invocation %s terminated by %s: %s", id.toString(), e.getClass().getSimpleName(), e.getMessage()));
@@ -302,6 +312,21 @@ public class Invocation implements Runnable {
             throw new DefinitionNotFoundException(String.format("The definition '%s' was not found", defName));
         }
         push(new ListObject(list, def.isExecuteSync()));
+    }
+
+    //Consume charge from the buffer.  If the buffer is empty, attempt to refill it.  Multiple refills in quick succession increases the refill amount.
+    public boolean consumeCharge(double amount) {
+        if (charge >= amount) { charge -= amount; return true; }
+        if (System.currentTimeMillis() > chargeAmountIncreaseTimestamp) {
+            amountToCharge = Math.round(amountToCharge * 1.5);
+        } else if (amountToCharge == 0) amountToCharge = 10;
+        double refillAmount = amountToCharge + (amount - charge);
+
+
+
+
+        chargeAmountIncreaseTimestamp = System.currentTimeMillis() + 500;
+        return true;
     }
 
     public void assertInAmbit(double x, double y, double z) {

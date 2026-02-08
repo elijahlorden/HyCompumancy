@@ -11,6 +11,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.BsonUtil;
 import me.freznel.compumancy.Compumancy;
+import me.freznel.compumancy.vm.execution.Caster;
 import me.freznel.compumancy.vm.execution.Invocation;
 import me.freznel.compumancy.vm.execution.InvocationState;
 
@@ -142,15 +143,13 @@ public class InvocationStore {
         var id = invocation.getId();
         if (invocations.containsKey(id)) return false;
         invocations.put(id, invocation);
-        var ref = invocation.getCaster();
-        if (!ref.isValid()) return false;
+        var caster = invocation.getCaster();
+        if (!caster.isValid()) return false;
         invocation.getWorld().execute(() -> {
-            if (!ref.isValid()) {
+            if (!caster.isValid()) {
                 invocations.remove(id);
             }
-            var store = ref.getStore();
-            var comp = store.getComponent(ref, Compumancy.get().getInvocationComponentType());
-            if (comp == null) comp = store.addComponent(ref, Compumancy.get().getInvocationComponentType());
+            var comp = caster.getOrCreateInvocationStoreComponent();
             comp.setOwner(owner);
             comp.add(id);
             if (!invocation.schedule()) {
@@ -172,18 +171,17 @@ public class InvocationStore {
         var invocation = invocations.remove(id);
         if (invocation == null) return false;
         invocation.suspend();
-        var ref = invocation.getCaster();
-        if (!ref.isValid()) return true;
+        var caster = invocation.getCaster();
+        if (!caster.isValid()) return true;
         invocation.getWorld().execute(() -> {
-            if (!ref.isValid()) return;
-            var store = ref.getStore();
-            var comp = store.getComponent(ref, Compumancy.get().getInvocationComponentType());
+            if (!caster.isValid()) return;
+            var comp = caster.getInvocationStoreComponent();
             if (comp != null) comp.remove(id);
         });
         return true;
     }
 
-    public boolean resume(UUID id, Ref<EntityStore> caster, World world) {
+    public boolean resume(UUID id, Caster<?> caster, World world) {
         var invocation = invocations.get(id);
         if (invocation == null) {
             var state = loadedInvocations.get(id);
@@ -211,8 +209,8 @@ public class InvocationStore {
                         for (var invocation : invocations) {
                             this.invocations.remove(invocation.getId());
                             invocation.suspend();
-                            var ref = invocation.getCaster();
-                            var comp = store.getComponent(ref, Compumancy.get().getInvocationComponentType());
+                            var caster = invocation.getCaster();
+                            var comp = caster.getInvocationStoreComponent();
                             if (comp != null) comp.remove(invocation.getId());
                         }
                     });
