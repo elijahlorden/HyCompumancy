@@ -14,6 +14,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,9 +24,10 @@ public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore>
     private final ArrayList<TickingBlockSubsystem<?>> subsystems;
     private final Map<Archetype<ChunkStore>, TickingBlockSubsystem<?>[]> archetypeMap;
 
-    public ScheduledBlockTickingSystem() {
+    public ScheduledBlockTickingSystem(TickingBlockSubsystem<?>... subsystems) {
         QUERY = Query.and(BlockSection.getComponentType(), ChunkSection.getComponentType());
-        subsystems = new ArrayList<>();
+        this.subsystems = new ArrayList<>();
+        this.subsystems.addAll(Arrays.asList(subsystems));
         archetypeMap = new HashMap<>();
     }
 
@@ -67,9 +69,9 @@ public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore>
             }
             if (subsystemArr.length == 0) return BlockTickStrategy.IGNORED;
 
-            boolean sleep = false;
+            boolean sleep = true;
             for (var subsystem : subsystemArr) {
-                sleep |= subsystem.tick(dt, commandBuffer1, blocks, blockComponentChunk1, blockRef, info);
+                sleep &= subsystem.tick(dt, commandBuffer1, blocks, blockComponentChunk1, blockRef, info);
             }
 
             return sleep ? BlockTickStrategy.SLEEP : BlockTickStrategy.CONTINUE;
