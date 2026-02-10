@@ -30,6 +30,5 @@ public class GetCasterAction extends VMAction {
         } else {
             invocation.push(NullObject.NULL);
         }
-
     }
 }

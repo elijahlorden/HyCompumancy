@@ -1,0 +1,128 @@
+{
+  "RenderMode": "Erosion",
+  "EmitOffset": {
+    "X": {
+      "Min": 3,
+      "Max": 3
+    },
+    "Y": {
+      "Min": 3,
+      "Max": 3
+    },
+    "Z": {
+      "Min": 3,
+      "Max": 3
+    }
+  },
+  "ParticleRotationInfluence": "Billboard",
+  "LinearFiltering": true,
+  "LightInfluence": 0,
+  "ParticleRotateWithSpawner": false,
+  "TrailSpawnerPositionMultiplier": 1,
+  "TrailSpawnerRotationMultiplier": 1,
+  "MaxConcurrentParticles": 100,
+  "ParticleLifeSpan": {
+    "Min": 5,
+    "Max": 5
+  },
+  "InitialVelocity": {
+    "Speed": {
+      "Min": 0.0,
+      "Max": 0
+    },
+    "Yaw": {
+      "Min": 0,
+      "Max": 0
+    },
+    "Pitch": {
+      "Min": 0,
+      "Max": 0
+    }
+  },
+  "Attractors": [
+    {
+      "Position": {
+        "X": 0,
+        "Y": -1,
+        "Z": 0
+      },
+      "RadialAxis": {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      "RadialAcceleration": -1.1,
+      "RadialTangentAcceleration": 0,
+      "DampingMultiplier": {
+        "X": 0.85,
+        "Y": 0.85,
+        "Z": 0.85
+      },
+      "LinearAcceleration": {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      "RadialTangentImpulse": 0
+    }
+  ],
+  "Particle": {
+    "Texture": "Particles/Textures/Basic/Spark.png",
+    "FrameSize": {
+      "Width": 32,
+      "Height": 32
+    },
+    "ScaleRatioConstraint": "OneToOne",
+    "Animation": {
+      "0": {
+        "Scale": {
+          "X": {
+            "Min": 1,
+            "Max": 1
+          }
+        },
+        "Opacity": 0,
+        "Color": "#b3fc00"
+      },
+      "20": {
+        "Color": "#b3fc00",
+        "Opacity": 1
+      },
+      "80": {
+        "Color": "#ffffff",
+        "Opacity": 1
+      }
+    },
+    "InitialAnimationFrame": {
+      "Scale": {
+        "X": {
+          "Min": 0.05,
+          "Max": 0.1
+        }
+      },
+      "Opacity": 1,
+      "FrameIndex": {
+        "Min": 0,
+        "Max": 0
+      }
+    },
+    "CollisionAnimationFrame": {
+      "Opacity": 0,
+      "FrameIndex": {
+        "Max": 999,
+        "Min": 40
+      }
+    },
+    "UVOption": "None"
+  },
+  "SpawnBurst": false,
+  "SpawnRate": {
+    "Min": 20,
+    "Max": 50
+  },
+  "LifeSpan": 10,
+  "ParticleCollision": {
+    "BlockType": "Solid",
+    "Action": "Expire"
+  }
+}

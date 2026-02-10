@@ -1,24 +1,22 @@
 package me.freznel.compumancy;
 
-import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.ComponentRegistryProxy;
 import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
-import com.hypixel.hytale.server.core.asset.type.blocktype.config.farming.FarmingData;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.Config;
 import com.hypixel.hytale.server.core.util.concurrent.ThreadUtil;
-import me.freznel.compumancy.ecs.component.DefinitionStoreComponent;
-import me.freznel.compumancy.ecs.component.InvocationComponent;
+import me.freznel.compumancy.ecs.component.*;
 import me.freznel.compumancy.commands.CompumancyCommandCollection;
 import me.freznel.compumancy.config.CompumancyConfig;
+import me.freznel.compumancy.ecs.system.block.ScheduledBlockTickingSystem;
+import me.freznel.compumancy.ecs.system.block.SolarCrystalSystems;
 import me.freznel.compumancy.vm.RegisterVMObjects;
 import me.freznel.compumancy.vm.store.InvocationStore;
 
-import java.time.Instant;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,6 +29,8 @@ public class Compumancy extends JavaPlugin {
     private static Compumancy instance;
     public static Compumancy get() { return instance; }
 
+    //Executors
+
     private ScheduledExecutorService executor;
     public Executor getDaemonExecutor() { return executor; }
     public void scheduleDaemon(Runnable runnable, long delay) {
@@ -40,11 +40,24 @@ public class Compumancy extends JavaPlugin {
     private Executor userThreadPool;
     public Executor getUserExecutor() { return userThreadPool; }
 
+    //Components
+
     private ComponentType<EntityStore, InvocationComponent> invocationComponentType;
     public ComponentType<EntityStore, InvocationComponent> getInvocationComponentType() { return invocationComponentType; }
 
     private ComponentType<EntityStore, DefinitionStoreComponent> definitionStoreComponentType;
     public ComponentType<EntityStore, DefinitionStoreComponent> getDefinitionStoreComponentType() { return definitionStoreComponentType; }
+
+    private ComponentType<ChunkStore, ScheduledBlockComponent> scheduledBlockComponentType;
+    public ComponentType<ChunkStore, ScheduledBlockComponent> getScheduledBlockComponentType() { return scheduledBlockComponentType; }
+
+    private ComponentType<ChunkStore, BlockCapacitorComponent> blockCapacitorComponentComponentType;
+    public ComponentType<ChunkStore, BlockCapacitorComponent> getBlockCapacitorComponentType() { return blockCapacitorComponentComponentType; }
+
+    private ComponentType<ChunkStore, SolarCrystalComponent> solarCrystalComponentComponentType;
+    public ComponentType<ChunkStore, SolarCrystalComponent> getSolarCrystalComponentComponentType() { return solarCrystalComponentComponentType; }
+
+    //Config
 
     private final Config<CompumancyConfig> config;
     public CompumancyConfig getConfig() { return config.get(); }
@@ -69,13 +82,24 @@ public class Compumancy extends JavaPlugin {
         RegisterVMObjects.register();
 
         ComponentRegistryProxy<EntityStore> entityStoreComponentRegistry = this.getEntityStoreRegistry();
+        ComponentRegistryProxy<ChunkStore> chunkStoreComponentRegistryProxy = this.getChunkStoreRegistry();
 
-        //Register components
-        invocationComponentType = entityStoreComponentRegistry.registerComponent(InvocationComponent.class, "InvocationComponent", InvocationComponent.CODEC);
-        definitionStoreComponentType = entityStoreComponentRegistry.registerComponent(DefinitionStoreComponent.class, "DefinitionStoreComponent", DefinitionStoreComponent.CODEC);
+        //Register entity components
+        invocationComponentType = entityStoreComponentRegistry.registerComponent(InvocationComponent.class, "FZCOMPU:InvocStore", InvocationComponent.CODEC);
+        definitionStoreComponentType = entityStoreComponentRegistry.registerComponent(DefinitionStoreComponent.class, "FZCOMPU:DefStore", DefinitionStoreComponent.CODEC);
 
-        //Register systems
+
+        //Register entity systems
         entityStoreComponentRegistry.registerSystem(new InvocationComponent.InvocationComponentRefSystem());
+
+        //Register block components
+        scheduledBlockComponentType = chunkStoreComponentRegistryProxy.registerComponent(ScheduledBlockComponent.class, "FZCOMPU:BlkTck", ScheduledBlockComponent.CODEC);
+        blockCapacitorComponentComponentType = chunkStoreComponentRegistryProxy.registerComponent(BlockCapacitorComponent.class, "FZCOMPU:Capacitor", BlockCapacitorComponent.CODEC);
+        solarCrystalComponentComponentType = chunkStoreComponentRegistryProxy.registerComponent(SolarCrystalComponent.class, "FZCOMPU:SolarCrystal", SolarCrystalComponent.CODEC);
+
+        //Register block systems
+        chunkStoreComponentRegistryProxy.registerSystem(new ScheduledBlockTickingSystem());
+
 
         this.getCommandRegistry().registerCommand(new CompumancyCommandCollection());
     }

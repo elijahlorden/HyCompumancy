@@ -6,6 +6,6 @@ public interface ICapacitor {
     public double getCharge();
 
     public double add(double amount);
-    public default double remove(double amount) { return add(-amount); }
+    public double remove(double amount);
 
 }

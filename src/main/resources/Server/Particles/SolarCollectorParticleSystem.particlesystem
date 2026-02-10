@@ -1,0 +1,13 @@
+{
+  "Spawners": [
+    {
+      "SpawnerId": "SolarParticleSpawner",
+      "FixedRotation": true,
+      "PositionOffset": {
+        "X": 0.5,
+        "Y": 1,
+        "Z": 0.5
+      }
+    }
+  ]
+}
