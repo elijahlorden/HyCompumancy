@@ -71,8 +71,8 @@ public class SolarCrystalSystems {
         }
 
         @Override
-        public ComponentType<ChunkStore, SolarCrystalComponent> getComponentType() {
-            return CRYSTAL_COMPONENT_TYPE;
+        public Query<ChunkStore> getQuery() {
+            return Query.and(CRYSTAL_COMPONENT_TYPE, CAPACITOR_COMPONENT_TYPE);
         }
 
         @Override

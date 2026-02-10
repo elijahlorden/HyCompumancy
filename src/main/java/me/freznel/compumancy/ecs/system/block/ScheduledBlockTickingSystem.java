@@ -20,18 +20,17 @@ import java.util.Map;
 public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore> {
     private static Query<ChunkStore> QUERY;
 
-    private final Map<ComponentType<ChunkStore, ?>, TickingBlockSubsystem<?>> subsystems;
+    private final ArrayList<TickingBlockSubsystem<?>> subsystems;
     private final Map<Archetype<ChunkStore>, TickingBlockSubsystem<?>[]> archetypeMap;
 
     public ScheduledBlockTickingSystem() {
         QUERY = Query.and(BlockSection.getComponentType(), ChunkSection.getComponentType());
-        subsystems = new HashMap<>();
+        subsystems = new ArrayList<>();
         archetypeMap = new HashMap<>();
     }
 
     public void Register(TickingBlockSubsystem<?> subsystem) {
-        var type = subsystem.getComponentType();
-        subsystems.put(type, subsystem);
+        subsystems.add(subsystem);
     }
 
     @Override
@@ -48,6 +47,7 @@ public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore>
         assert section != null;
         var blockComponentChunk = commandBuffer.getComponent(section.getChunkColumnReference(), BlockComponentChunk.getComponentType());
         assert blockComponentChunk != null;
+
         blocks.forEachTicking(blockComponentChunk, commandBuffer, section.getY(), (blockComponentChunk1, commandBuffer1, localX, localY, localZ, blockId) -> {
             Ref<ChunkStore> blockRef = blockComponentChunk1.getEntityReference(ChunkUtil.indexBlockInColumn(localX, localY, localZ));
             if (blockRef == null) return BlockTickStrategy.IGNORED;
@@ -59,10 +59,8 @@ public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore>
 
             if (subsystemArr == null) {
                 ArrayList<TickingBlockSubsystem<?>> newArr = new ArrayList<>();
-                for (int i = 0; i < archetype.count(); i++) {
-                    var ct = archetype.get(i);
-                    var sub = subsystems.get(ct);
-                    if (sub != null) newArr.add(sub);
+                for (var subsystem : subsystems) {
+                    if (subsystem.getQuery().test(archetype)) newArr.add(subsystem);
                 }
                 subsystemArr = newArr.toArray(new TickingBlockSubsystem<?>[0]);
                 archetypeMap.put(archetype, subsystemArr);
