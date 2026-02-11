@@ -17,23 +17,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.StampedLock;
 
 public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore> {
+    private static final TickingBlockSubsystem<?>[] EMPTY = new TickingBlockSubsystem<?>[0];
     private static Query<ChunkStore> QUERY;
 
     private final ArrayList<TickingBlockSubsystem<?>> subsystems;
-    private final Map<Archetype<ChunkStore>, TickingBlockSubsystem<?>[]> sharedArchetypeMap; //Not really sure if this is necessary, but duplicating the arrays in each world feels wrong
-    private final ThreadLocal<Map<Archetype<ChunkStore>, TickingBlockSubsystem<?>[]>> localArchetypeMap;
-    private final StampedLock stampedLock;
+    private final Map<Archetype<ChunkStore>, TickingBlockSubsystem<?>[]> sharedArchetypeMap;
 
     public ScheduledBlockTickingSystem(TickingBlockSubsystem<?>... subsystems) {
         QUERY = Query.and(BlockSection.getComponentType(), ChunkSection.getComponentType());
         this.subsystems = new ArrayList<>();
         this.subsystems.addAll(Arrays.asList(subsystems));
-        sharedArchetypeMap = new HashMap<>();
-        stampedLock = new StampedLock();
-        localArchetypeMap = new ThreadLocal<>();
+        sharedArchetypeMap = new ConcurrentHashMap<>();
     }
 
     public void Register(TickingBlockSubsystem<?> subsystem) {
@@ -45,6 +43,19 @@ public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore>
         return QUERY;
     }
 
+    private TickingBlockSubsystem<?>[] getSubsystemsFor(Archetype<ChunkStore> archetype) {
+        var arr = sharedArchetypeMap.get(archetype);
+        if (arr != null) return arr;
+        return sharedArchetypeMap.computeIfAbsent(archetype, _ -> {
+            ArrayList<TickingBlockSubsystem<?>> buffer = new ArrayList<>();
+            for (var subsystem : subsystems) {
+                if (subsystem.getQuery().test(archetype)) buffer.add(subsystem);
+            }
+            if (buffer.isEmpty()) return EMPTY;
+            return buffer.toArray(new TickingBlockSubsystem<?>[0]);
+        });
+    }
+
     @Override
     public void tick(float dt, int index, @NonNull ArchetypeChunk<ChunkStore> archetypeChunk, @NonNull Store<ChunkStore> store, @NonNull CommandBuffer<ChunkStore> commandBuffer) {
         var blocks = archetypeChunk.getComponent(index, BlockSection.getComponentType());
@@ -54,50 +65,18 @@ public class ScheduledBlockTickingSystem extends EntityTickingSystem<ChunkStore>
         assert section != null;
         var blockComponentChunk = commandBuffer.getComponent(section.getChunkColumnReference(), BlockComponentChunk.getComponentType());
         assert blockComponentChunk != null;
-        var localMap = localArchetypeMap.get();
 
         blocks.forEachTicking(blockComponentChunk, commandBuffer, section.getY(), (blockComponentChunk1, commandBuffer1, localX, localY, localZ, blockId) -> {
             Ref<ChunkStore> blockRef = blockComponentChunk1.getEntityReference(ChunkUtil.indexBlockInColumn(localX, localY, localZ));
             if (blockRef == null) return BlockTickStrategy.IGNORED;
             BlockModule.BlockStateInfo info = commandBuffer.getComponent(blockRef, BlockModule.BlockStateInfo.getComponentType());
 
-            //Cache a list of subsystems by archetype
             var archetype = commandBuffer1.getArchetype(blockRef);
-            var subsystemArr = localMap.get(archetype);
-
-            if (subsystemArr == null) {
-                var stamp = stampedLock.readLock();
-                try {
-                    subsystemArr = sharedArchetypeMap.get(archetype);
-                    if (subsystemArr != null) {
-                        localMap.put(archetype, subsystemArr);
-                    } else {
-                        ArrayList<TickingBlockSubsystem<?>> newArrList = new ArrayList<>();
-                        for (var subsystem : subsystems) {
-                            if (subsystem.getQuery().test(archetype)) newArrList.add(subsystem);
-                        }
-                        var newSubsystemArr = newArrList.toArray(new TickingBlockSubsystem<?>[0]);
-                        localMap.put(archetype, newSubsystemArr);
-                        while (subsystemArr == null) { //Upgrade the read lock to a write lock
-                            var writeStamp = stampedLock.tryConvertToWriteLock(stamp);
-                            if (writeStamp != 0L) {
-                                stamp = writeStamp;
-                                subsystemArr = newSubsystemArr;
-                                sharedArchetypeMap.put(archetype, newSubsystemArr);
-                            } else {
-                                stampedLock.unlock(stamp);
-                                stamp = stampedLock.writeLock();
-                            }
-                        }
-                    }
-                } finally {
-                    stampedLock.unlock(stamp);
-                }
-            }
-            if (subsystemArr.length == 0) return BlockTickStrategy.IGNORED;
+            var archetypeSubsystems = getSubsystemsFor(archetype);
+            if (archetypeSubsystems.length == 0) return BlockTickStrategy.IGNORED;
 
             boolean sleep = true;
-            for (var subsystem : subsystemArr) {
+            for (var subsystem : archetypeSubsystems) {
                 sleep &= subsystem.tick(dt, commandBuffer1, blocks, blockComponentChunk1, blockRef, info);
             }
 

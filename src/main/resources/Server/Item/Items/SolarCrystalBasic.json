@@ -33,6 +33,26 @@
           "FaceType": "Full"
         }
       ]
+    },
+    "Components": {
+      "FZCOMPU:SolarCrystal": {
+        "Rate": 5
+      },
+      "FZCOMPU:Capacitor": {
+        "Charge": 0,
+        "Capacity": 100
+      }
+    },
+    "BlockEntity": {
+      "Components": {
+        "FZCOMPU:Capacitor": {
+          "Charge": 0,
+          "Capacity": 100
+        },
+        "FZCOMPU:SolarCrystal": {
+          "Rate": 1
+        }
+      }
     }
   },
   "IconProperties": {

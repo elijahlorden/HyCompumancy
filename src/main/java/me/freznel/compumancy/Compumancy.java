@@ -98,6 +98,7 @@ public class Compumancy extends JavaPlugin {
         solarCrystalComponentComponentType = chunkStoreComponentRegistryProxy.registerComponent(SolarCrystalComponent.class, "FZCOMPU:SolarCrystal", SolarCrystalComponent.CODEC);
 
         //Register block systems
+        chunkStoreComponentRegistryProxy.registerSystem(new SolarCrystalSystems.SolarCrystalRefSystem());
         chunkStoreComponentRegistryProxy.registerSystem(new ScheduledBlockTickingSystem(
                 new SolarCrystalSystems.SolarCrystalTickingSubsystem()
         ));
